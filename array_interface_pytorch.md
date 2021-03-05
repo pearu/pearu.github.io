@@ -36,7 +36,7 @@ for re-using data buffers of buffer-like objects.
 The Buffer protocol can implemented for extension types using Python C/API. Notice that
 the buffer protocol cannot be implemented for types defined in Python:
 this has been requested and discussed but no solution yet.
-In Python, the extension types data buffers can be accessed using `memoryview` object.
+In Python, the data buffers of extension types can be accessed using `memoryview` object.
 
 # The current usage of array interfaces
 
@@ -85,7 +85,7 @@ Currently, PyTorch implements hooks for
 `__array__` and `__cuda_array_interface__` but not for
 `__array_interface__` nor `__array_struct__`.
 
-# Using array interfaces in the context of NumPy arrays
+# Using array/buffer interfaces in the context of NumPy arrays
 
 NumPy ndarray object implements CPU Array Interface as well as Buffer Protocol for sharing its data buffers:
 
@@ -104,18 +104,110 @@ array([1, 2, 3, 4])
 
 NumPy ndarray can be used for wrapping arbitrary objects that implement the CPU Array Interface or Buffer Protocol:
 ```python
+>>> data = numpy.array([1, 2, 3, 4, 5])  # this will be the only place where memory will be located for data
 >>> class A1:
-...     def __init__(self, data):
-...         self._data = numpy.array(data)
-...     def __array__(self):
-...         return self._data
+...     def __array__(self): return data
 ... 
->>> a = A1([1, 2, 3, 4])
->>> arr = numpy.asarray(a)
->>> arr[0] = 99
->>> a._data  # notice the shared memory efect
-array([99,  2,  3,  4])
+>>> class A2:
+...     __array_interface__ = data.__array_interface__
+... 
+>>> class A3:
+...     __array_struct__ = data.__array_struct__
+... 
+>>> a1 = numpy.asarray(A1())
+>>> a1[0] = 11
+>>> a2 = numpy.asarray(A2())
+>>> a2[1] = 21
+>>> a3 = numpy.asarray(A3())
+>>> a3[2] = 31
+>>> m4 = memoryview(data)
+>>> a4 = numpy.frombuffer(m4, dtype=m4.format)
+>>> a4[3] = 41
+>>> data
+array([11, 21, 31, 41,  5])
 ```
 
-# Using array interfaces in the context of PyTorch tensors
+# Using array/buffer interfaces in the context of PyTorch tensors
 
+PyTorch Tensor object implements the CPU Array Interface partly and does not implement Buffer Protocol:
+```python
+>>> import torch
+>>> t = torch.tensor([1, 2, 3, 4, 5])
+>>> arr = t.__array__()  # equivalent to numpy.asarray(t)
+>>> arr[0] = 99
+>>> t
+tensor([99,  2,  3,  4,  5])
+>>> t.__array_interface__
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'Tensor' object has no attribute '__array_interface__'
+>>> t.__array_struct__
+AttributeError: 'Tensor' object has no attribute '__array_struct__'
+>>> memoryview(t)
+TypeError: memoryview: a bytes-like object is required, not 'Tensor'
+```
+However, since the `Tensor.__array__()` method returns a NumPy ndarray as a view of tensor data buffer,
+the CPU Array Interface is effective to PyTorch tensors:
+```
+ >>> t.__array__().__array_interface__
+{'data': (93915843345344, False), 'strides': None, 'descr': [('', '<i8')], 'typestr': '<i8', 'shape': (5,), 'version': 3}
+>>> t.__array__().__array_struct__
+<capsule object NULL at 0x7f4b9694e990>
+>>> memoryview(t.__array__())
+<memory at 0x7f4b96303d00>
+```
+
+PyTorch Tensor object implements the CUDA Array Interface:
+```python
+>>> t = torch.tensor([1, 2, 3, 4, 5], device='cuda')
+>>> t.__cuda_array_interface__
+{'typestr': '<i8', 'shape': (5,), 'strides': None, 'data': (139961292554240, False), 'version': 2}
+```
+
+PyTorch Tensor object cannot be used for wrapping arbitrary objects that implement the CPU Array Interface:
+```python
+>>> data = numpy.array([1, 2, 3, 4, 5])
+>>> class A1:
+...     def __array__(self): return data
+... 
+>>> class A2:
+...     __array_interface__ = data.__array_interface__
+... 
+>>> class A3:
+...     __array_struct__ = data.__array_struct__
+... 
+>>> t1 = torch.as_tensor(A1())
+RuntimeError: Could not infer dtype of A1
+>>> t2 = torch.as_tensor(A2())
+RuntimeError: Could not infer dtype of A2
+>>> t3 = torch.as_tensor(A3())
+RuntimeError: Could not infer dtype of A3
+```
+However, wrapping the objects with NumPy ndarray first, one can effectively wrap arbitrary objects using PyTorch Tensor object:
+```python
+>>> t1 = torch.as_tensor(numpy.asarray(A1()))
+>>> t1[0] = 101
+>>> t2 = torch.as_tensor(numpy.asarray(A2()))
+>>> t2[1] = 102
+>>> t3 = torch.as_tensor(numpy.asarray(A3()))
+>>> t3[2] = 103
+>>> data
+array([101, 102, 103,   4,   5])
+```
+
+Pytorch Tensor object implements the Buffer Protocol partly (or incorrectly):
+```python
+>>> m4 = memoryview(data)
+>>> t4 = torch.as_tensor(m4)  # A copy of memoryview buffer is made!!!
+>>> t4[3] = 104
+>>> data
+array([101, 102, 103,   4,   5])
+
+```
+but wrapping with NumPy ndarray provides a workaround:
+```python
+>>> t4 = torch.as_tensor(numpy.frombuffer(m4, dtype=m4.format))
+>>> t4[3] = 104
+>>> data
+array([101, 102, 103, 104,   5])
+```
