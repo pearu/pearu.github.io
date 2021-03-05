@@ -45,11 +45,9 @@ the data buffer address will point to GPU memory area.
 
 [PEP 3118 Buffer Protocol](https://www.python.org/dev/peps/pep-3118/) defines Python C/API
 for re-using data buffers of buffer-like objects.
-The Buffer protocol can implemented for extension types using Python C/API. Notice that
-the buffer protocol cannot be implemented for types defined in Python:
-this has been requested and discussed but no solution yet.
+The Buffer protocol can implemented for extension types using Python C/API but not for types defined in Python:
+this has been [requested and discussed but no solution yet](https://bugs.python.org/issue41285).
 In Python, the data buffers of extension types can be accessed using `memoryview` object.
-
 
 # Using array/buffer interfaces in the context of NumPy arrays
 
