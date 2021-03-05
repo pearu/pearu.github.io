@@ -118,8 +118,6 @@ PyTorch Tensor object implements the CPU Array Interface partly and does not imp
 >>> t
 tensor([99,  2,  3,  4,  5])
 >>> t.__array_interface__
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
 AttributeError: 'Tensor' object has no attribute '__array_interface__'
 >>> t.__array_struct__
 AttributeError: 'Tensor' object has no attribute '__array_struct__'
@@ -128,7 +126,7 @@ TypeError: memoryview: a bytes-like object is required, not 'Tensor'
 ```
 However, since the `Tensor.__array__()` method returns a NumPy ndarray as a view of tensor data buffer,
 the CPU Array Interface is effective to PyTorch tensors:
-```
+```python
  >>> t.__array__().__array_interface__
 {'data': (93915843345344, False), 'strides': None, 'descr': [('', '<i8')], 'typestr': '<i8', 'shape': (5,), 'version': 3}
 >>> t.__array__().__array_struct__
