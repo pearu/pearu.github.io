@@ -5,13 +5,13 @@
 defines a protocol for objects to re-use each other's data buffers.
 It was created in 2005 within the [NumPy](https://numpy.org/) project for CPU array-like
 objects. The implementation of the array interface is defined by the
-existence of the following attributes:
+existence of the following attributes/methofs:
 
 - `__array_interface__` - a Python dictionary that contains the shape,
   the element type, and optionally, the data buffer address and the
   strides of an array-like object.
 
-- `__array__` - a NumPy ndarray view of an array-like object
+- `__array__()` - a method returning NumPy ndarray view of an array-like object
 
 - `__array_struct__` - holds a pointer to [PyArrayInterface
   C-structure](https://numpy.org/doc/stable/reference/arrays.interface.html#object.__array_struct__).
