@@ -1,3 +1,3 @@
 # Pearu's blogs
 
-- [Array Interfaces and PyTorch](array_interface_pytorch.md) - March 5, 2021
+See https://pearu.github.io/
