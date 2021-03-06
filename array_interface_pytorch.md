@@ -91,6 +91,22 @@ NumPy ndarray can be used for wrapping arbitrary objects that implement the CPU 
 array([11, 21, 31, 41,  5])
 ```
 
+## Performance
+
+As seen above, there are at least four ways to construct a NumPy ndarray view of objects implementing different protocols.
+Here follows a performance test for all these cases:
+```python
+>>> timeit.timeit('asarray(a)', globals=dict(asarray=numpy.asarray, a=a1))
+0.9288884210400283
+>>> timeit.timeit('asarray(a)', globals=dict(asarray=numpy.asarray, a=a2))
+1.0962302377447486
+>>> timeit.timeit('asarray(a)', globals=dict(asarray=numpy.asarray, a=a3))
+0.8403316191397607
+>>> timeit.timeit('asarray(a)', globals=dict(asarray=numpy.frombuffer, a=m4))
+0.20243035722523928
+```
+So, the Array Interface methods `__array_interface__`, `__array__`, `__array_struct__` are about 6, 5.5, 4.2 times slower than the Buffer Protocol, respectively.
+
 ## Recommendations
 
 By default, `numpy.frombuffer(buf)` returns a NumPy ndarray with `dtype==numpy.float64` but discards `buf.format`.
@@ -207,7 +223,7 @@ tensor([   1,    2,    3,    4, 1005], device='cuda:0')
 1. Implement `torch.Tensor.__array_interface__` and `torch.Tensor.__array_struct__` attributes to fully support the CPU Array Interfaced.
 2. `torch.as_tensor(obj)` should succeed when `obj` implements the CPU Array Interface but is not NumPy ndarray nor PyTorch Tensor object.
 3. `torch.as_tensor(obj)` should use `device='cuda'` by default when `obj` implements the CUDA Array Interface. Currently, a CPU copy of a CUDA data buffer is returned from `torch.as_tensor(obj)` while it would be more natural to return a CUDA view of the CUDA data buffer, IMHO.
-4. `torch.as_tensor(buf)` should return a view of data buffer when `buf` is `memoryview` object. Currently, a copy of data buffer is made.
+4. `torch.as_tensor(buf)` should return a view of data buffer when `buf` is `memoryview` object. Currently, a copy of data buffer is made. BC alert!
 
 # The current usage of array interfaces in different Python libraries - an estimate.
 
