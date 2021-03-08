@@ -59,11 +59,11 @@ NumPy ndarray object implements CPU Array Interface as well as Buffer Protocol f
 >>> arr.__array__()
 array([1, 2, 3, 4])
 >>> arr.__array_interface__
-{'data': (93870472383472, False), 'strides': None, 'descr': [('', '<i8')], 'typestr': '<i8', 'shape': (4,), 'version': 3}
+{'data': (94135167000128, False), 'strides': None, 'descr': [('', '<i8')], 'typestr': '<i8', 'shape': (4,), 'version': 3}
 >>> arr.__array_struct__
-<capsule object NULL at 0x7fa9e86c9750>
+<capsule object NULL at 0x7f1705fd7c90>
 >>> memoryview(arr)
-<memory at 0x7fab16419340>
+<memory at 0x7f18329164c0>
 ```
 
 NumPy ndarray can be used for wrapping arbitrary objects that implement the CPU Array Interface or Buffer Protocol:
@@ -96,16 +96,17 @@ array([11, 21, 31, 41,  5])
 As seen above, there are at least four ways to construct a NumPy ndarray view of objects implementing different protocols.
 Here follows a performance test for all these cases:
 ```python
->>> timeit.timeit('asarray(a)', globals=dict(asarray=numpy.asarray, a=a1))
-0.9288884210400283
->>> timeit.timeit('asarray(a)', globals=dict(asarray=numpy.asarray, a=a2))
-1.0962302377447486
->>> timeit.timeit('asarray(a)', globals=dict(asarray=numpy.asarray, a=a3))
-0.8403316191397607
->>> timeit.timeit('asarray(a)', globals=dict(asarray=numpy.frombuffer, a=m4))
-0.20243035722523928
+>>> import timeit
+>>> e4 = timeit.timeit('asarray(a)', globals=dict(asarray=numpy.frombuffer, a=m4), number=100000)
+>>> round(timeit.timeit('asarray(a)', globals=dict(asarray=numpy.asarray, a=A1()), number=100000) / e4, 1)
+5.8
+>>> round(timeit.timeit('asarray(a)', globals=dict(asarray=numpy.asarray, a=A2()), number=100000) / e4, 1)
+6.5
+>>> round(timeit.timeit('asarray(a)', globals=dict(asarray=numpy.asarray, a=A3()), number=100000) / e4, 1)
+4.8
 ```
-So, the Array Interface methods `__array_interface__`, `__array__`, `__array_struct__` are about 6, 5.5, 4.2 times slower than the Buffer Protocol, respectively.
+So, the Array Interface methods `__array_interface__`, `__array__`,
+`__array_struct__` are 4.5 to 6.5 times slower than the Buffer Protocol.
 
 ## Recommendations
 
@@ -143,19 +144,19 @@ TypeError: memoryview: a bytes-like object is required, not 'Tensor'
 However, since the `Tensor.__array__()` method returns a NumPy ndarray as a view of tensor data buffer,
 the CPU Array Interface is effective to PyTorch tensors:
 ```python
- >>> t.__array__().__array_interface__
-{'data': (93915843345344, False), 'strides': None, 'descr': [('', '<i8')], 'typestr': '<i8', 'shape': (5,), 'version': 3}
+>>> t.__array__().__array_interface__
+{'data': (94135211131264, False), 'strides': None, 'descr': [('', '<i8')], 'typestr': '<i8', 'shape': (5,), 'version': 3}
 >>> t.__array__().__array_struct__
-<capsule object NULL at 0x7f4b9694e990>
+<capsule object NULL at 0x7f1705f7c8a0>
 >>> memoryview(t.__array__())
-<memory at 0x7f4b96303d00>
+<memory at 0x7f169f717dc0>
 ```
 
 PyTorch Tensor object implements the CUDA Array Interface:
 ```python
 >>> t = torch.tensor([1, 2, 3, 4, 5], device='cuda')
 >>> t.__cuda_array_interface__
-{'typestr': '<i8', 'shape': (5,), 'strides': None, 'data': (139961292554240, False), 'version': 2}
+{'typestr': '<i8', 'shape': (5,), 'strides': None, 'data': (139733860614144, False), 'version': 2}
 ```
 
 PyTorch Tensor object cannot be used for wrapping arbitrary objects that implement the CPU Array Interface:
@@ -196,7 +197,6 @@ PyTorch Tensor object implements the Buffer Protocol partly (or incorrectly):
 >>> t4[3] = 104
 >>> data
 array([101, 102, 103,   4,   5])
-
 ```
 but wrapping with NumPy ndarray provides a workaround:
 ```python
