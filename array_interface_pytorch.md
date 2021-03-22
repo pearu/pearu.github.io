@@ -59,11 +59,11 @@ NumPy ndarray object implements CPU Array Interface as well as Buffer Protocol f
 >>> arr.__array__()
 array([1, 2, 3, 4])
 >>> arr.__array_interface__
-{'data': (94135167000128, False), 'strides': None, 'descr': [('', '<i8')], 'typestr': '<i8', 'shape': (4,), 'version': 3}
+{'data': (94398925856320, False), 'strides': None, 'descr': [('', '<i8')], 'typestr': '<i8', 'shape': (4,), 'version': 3}
 >>> arr.__array_struct__
-<capsule object NULL at 0x7f1705fd7c90>
+<capsule object NULL at 0x7f86f8354a80>
 >>> memoryview(arr)
-<memory at 0x7f18329164c0>
+<memory at 0x7f8824bf94c0>
 ```
 
 NumPy ndarray can be used for wrapping arbitrary objects that implement the CPU Array Interface or Buffer Protocol:
@@ -95,6 +95,7 @@ array([11, 21, 31, 41,  5])
 
 As seen above, there are at least four ways to construct a NumPy ndarray view of objects implementing different protocols.
 Here follows a performance test for all these cases:
+<!--REQUIRE(timeit_DISABLE)-->
 ```python
 >>> import timeit
 >>> e4 = timeit.timeit('asarray(a)', globals=dict(asarray=numpy.frombuffer, a=m4), number=100000)
@@ -105,6 +106,7 @@ Here follows a performance test for all these cases:
 >>> round(timeit.timeit('asarray(a)', globals=dict(asarray=numpy.asarray, a=A3()), number=100000) / e4, 1)
 4.8
 ```
+<!--UNREQUIRE(timeit_DISABLE)-->
 So, the Array Interface methods `__array_interface__`, `__array__`,
 `__array_struct__` are 4.5 to 6.5 times slower than the Buffer Protocol.
 
@@ -145,18 +147,18 @@ However, since the `Tensor.__array__()` method returns a NumPy ndarray as a view
 the CPU Array Interface is effective to PyTorch tensors:
 ```python
 >>> t.__array__().__array_interface__
-{'data': (94135211131264, False), 'strides': None, 'descr': [('', '<i8')], 'typestr': '<i8', 'shape': (5,), 'version': 3}
+{'data': (94398970087872, False), 'strides': None, 'descr': [('', '<i8')], 'typestr': '<i8', 'shape': (5,), 'version': 3}
 >>> t.__array__().__array_struct__
-<capsule object NULL at 0x7f1705f7c8a0>
+<capsule object NULL at 0x7f8692074840>
 >>> memoryview(t.__array__())
-<memory at 0x7f169f717dc0>
+<memory at 0x7f8691a96f40>
 ```
 
 PyTorch Tensor object implements the CUDA Array Interface:
 ```python
 >>> t = torch.tensor([1, 2, 3, 4, 5], device='cuda')
 >>> t.__cuda_array_interface__
-{'typestr': '<i8', 'shape': (5,), 'strides': None, 'data': (139733860614144, False), 'version': 2}
+{'typestr': '<i8', 'shape': (5,), 'strides': None, 'data': (140214628515840, False), 'version': 2}
 ```
 
 PyTorch Tensor object cannot be used for wrapping arbitrary objects that implement the CPU Array Interface:

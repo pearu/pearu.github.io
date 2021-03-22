@@ -37,6 +37,29 @@ Usage:
 
 Each md file is considered as an independent Python script.
 
+Note 1
+------
+
+Some Python sessions may require to be run from specialized conda
+environments.  If the current process is run from a different
+environment, the corresponding Python sessions must be skipped (the
+subsequent Python sessions should not use variables from such Python
+sessions). To mark certain regions in the Markdown document to have
+constraints on installed packages, use the following specialized comments:
+
+  <!--REQUIRE(torch): tuple(map(int, torch.__version__.split('.')[:2])) >= (1, 9) -->
+  <!--REQUIRE(numpy) -->
+
+meaning that all subsequent code blocks require torch.__version__>=1.9
+and numpy installed. The argument to `REQUIRE` is a subpackage name
+that must be importable and anything following `:` must be a
+predicated expression that will be evaluated using Python eval function.
+
+The following comment line means that the pytorch requirement
+constraint is removed for subsequent Python sessions:
+
+  <!--UNREQUIRE(torch)-->
+
 """
 # Author: Pearu Peterson
 # Created: March 2021
@@ -47,6 +70,36 @@ import os
 import re
 import sys
 import argparse
+
+
+class Requirements:
+
+    def __init__(self):
+        self.globals = {}
+        self.state = {}
+
+    def __str__(self):
+        s = []
+        for n, v in self.state.items():
+            if v:
+                s.append(n)
+            else:
+                s.append(n + '!')
+        return 'REQUIRE[' + ', '.join(s) + ']'
+
+    def __bool__(self):
+        return all(self.state.values()) if self.state else True
+
+    def add(self, packagename, predicate='True'):
+        try:
+            exec(f'import {packagename}', self.globals, self.globals)
+        except ImportError:
+            self.state[packagename] = False
+        else:
+            self.state[packagename] = eval(predicate, self.globals, self.globals)
+
+    def drop(self, packagename):
+        self.state.pop(packagename, None)
 
 
 def unified_diff(a, b, fromfile='', tofile='', fromfiledate='',
@@ -183,6 +236,7 @@ def process_code(code, lineno, doc_globals, doc_locals):
             except Exception as msg:
                 actual.append(f'{type(msg).__name__}: {msg}')
         sys.stdout.flush()
+
     return ('\n'.join(actual) + '\n')
 
 
@@ -191,14 +245,25 @@ def process_document(document):
 
     Return new Markdown document with all Python sessions evaluated.
     """
+    requirements = Requirements()
     content = ['']
     flag = False
     code = ''
 
     doc_globals = {}
     doc_locals = {}
-
+    collector = []
     for lineno, line in enumerate(document.splitlines(True)):
+        if line.rstrip().endswith('-->'):
+            if line.lstrip().startswith('<!--REQUIRE(') or line.lstrip().startswith('<!--UNREQUIRE('):
+                i0 = line.find('(')
+                i1 = line.find(')')
+                predicate = line[i1+1].rstrip()[:-3].strip() or 'True'
+                for packagename in line[i0+1:i1].split(','):
+                    if 'UNREQUIRE' in line:
+                        requirements.drop(packagename.strip())
+                    else:
+                        requirements.add(packagename.strip(), predicate)
         if not flag:
             if line.strip() == '```python':
                 flag = True
@@ -207,9 +272,14 @@ def process_document(document):
         else:
             if line.strip() == '```':
                 flag = False
-                code = apply_indent(code, -indent)
-                code = process_code(code, lineno, doc_globals, doc_locals)
-                code = apply_indent(code, indent)
+                if requirements:
+                    code = apply_indent(code, -indent)
+                    code = process_code(code, lineno, doc_globals, doc_locals)
+                    code = apply_indent(code, indent)
+                else:
+                    startlineno = lineno - code.count('\n')
+                    endlineno = lineno
+                    print(f'{requirements} not satisfied. Skip processing lines {startlineno}:{endlineno}')
                 content.append(code)
                 content.append(line)
                 code = ''
