@@ -15,29 +15,30 @@ support in PyTorch. See [Roadmap for torch.sparse Matrix Product
 API](https://github.com/dhavide/rfcs/blob/master/RFC-0004-pyTorch-sparse-matmul-roadmap.md)
 for overview. The PR 50937 resolves this issue with high success: the
 performance of matrix multiplication of sparse matrix-vector and
-sparse matrix-dense matrix increases ten-fold when using CSR layout,
-another five-fold increase is achieved when using Intel MKL library
-tools, see [CSR vs COO
+sparse matrix-dense matrix increases by ten-fold when using the CSR
+layout, another five-fold increase is achieved when using Intel MKL
+library tools, see [CSR vs COO
 benchmarks](https://github.com/pytorch/pytorch/pull/44190#issue-479538842).
 
 However, maintaining the PR 50937 and preparing it for landing has
 become an increasingly difficult task because of 
 - the constant flux in PyTorch and used libraries APIs that causes
   periodic breakages in CI tests
-- inherit inference between different PyTorch features (Authgrad,
-  TorchScript, testing, etc) that must be taken into account when
+- inherit inference between different PyTorch features (Autograd,
+  TorchScript, Testing, etc) that must be taken into account when
   implementing a new storage layout.
 - the current conversation count (> 250), the discussion items count
   (ca 400), and the commit count (ca 260) makes hard to grasp the
   overall state of the PR.
 
-[It has been agreed](https://github.com/pytorch/pytorch/pull/50937#issuecomment-811253895)
+[It has been
+agreed](https://github.com/pytorch/pytorch/pull/50937#issuecomment-811253895)
 that the PR will land as it is but the work on the CSR layout support
-needs to continue to meet the still envolving PyTorch coding and
+needs to continue to meet the (still envolving) PyTorch coding and
 testing standards.
 
-Here, an attempt will be made to organize and discuss the follow up
-tasks.
+Here, an attempt will be made to organize and discuss the follow-up
+tasks for completing the CSR layout support.
 
 ##  Unresolved discussion items
 
@@ -75,12 +76,38 @@ tasks.
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604349014 - why not default to int32?
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604969458
 
-TODO: discuss
+IIUC, it would be preferred to support a single dtype for CSR indices
+tensors. (Explain why this preference).  While COO uses only int64 as
+dtype for indices, a natural choice for the dtype of CSR
+`crow/col_indices` would also be `int64`. As a result, the situation
+would be simpler for users, conversion from COO to CSR and CSR to COO
+would be memory/processor efficient, etc. However, a big performance
+gain in matrix multiplication is achieved when using Intel MKL library
+tools but with the current MKL support in PyTorch, only int32 indices
+can be used as inputs to MKL routines. 
+
+So, we could fix dtype to int64 (as in COO) but at the expense that
+one needs int64->int32 conversion (and inverse?) whenever calling an
+MKL routine.
+
+We could also fix dtype to int32 (that would be most efficient when
+using MKL support) but at the expense that all conversions between COO
+and CSR would be more expensive than necessary.
+
+Btw, the conversion between COO and CSR is important because the COO
+layout is the most human-friendly layout for constructing sparse
+tensors while the CSR layout is computationally much more efficient
+than COO.
 
 ## COO to CSR conversion
 
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604346660 - slow because implemented in Python
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r608326213 - dense-csr without coo
+
+Not much to discuss here: for efficiency, implement the direct dense
+to CSR conversion in C++. This will be important when we decide that
+the indices of COO and CSR will have different dtypes. Otherwise, I
+would not expect much performance gain.
 
 ## Testing
 
@@ -108,9 +135,16 @@ TODO: discuss
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r608326624 - use assertExpectedInline
 
 
-## After landing
+## Deal for landing PR 50937
 
 - https://github.com/pytorch/pytorch/pull/50937#issuecomment-811253895 - the deal of landing
 - https://github.com/pytorch/pytorch/pull/50937#issuecomment-812888029 - tentative plan
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r608312830 - dtype/device parameters
 - https://github.com/pytorch/pytorch/pull/50937#issuecomment-814944029 - more todo items
+
+## Main features missing
+
+- CUDA support in the CSR layout.
+- Inference with Autograd - this is relevant also to COO layout as to
+  sparse tensor support in general.
+- Generalization of CSR as N-dimensional tensor
