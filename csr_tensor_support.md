@@ -23,10 +23,10 @@ benchmarks](https://github.com/pytorch/pytorch/pull/44190#issue-479538842).
 However, maintaining the PR 50937 and preparing it for landing has
 become an increasingly difficult task because of 
 - the constant flux in PyTorch and used libraries APIs that causes
-  periodic breakages in CI tests
+  periodic merge conflicts,
 - inherit inference between different PyTorch features (Autograd,
   TorchScript, Testing, etc) that must be taken into account when
-  implementing a new storage layout.
+  implementing a new storage layout,
 - the current conversation count (> 250), the discussion items count
   (ca 400), and the commit count (ca 260) makes hard to grasp the
   overall state of the PR.
