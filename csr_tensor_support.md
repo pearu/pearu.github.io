@@ -52,10 +52,10 @@ tasks for completing the CSR layout support.
 - ~https://github.com/pytorch/pytorch/pull/50937#issuecomment-803905480 - is it fixed?~ yes, docs look ok, although doc build success is not verified
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r603533421 - is it fixed?, no: decide if `crow_indices()` should return `Tensor` or `const Tensor &`
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r603535187 - is it fixed?, no AFICT: need single point entry for constructing csr tensor
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r603536011 - resize internal tensors for memory efficiency
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r603537183 - eliminate memory format
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604353856 - test return value
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604354153 - use C++ RAII
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r603536011 - resize internal tensors for memory efficiency https://github.com/pytorch/pytorch/issues/56696
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r603537183 - eliminate memory format, https://github.com/pytorch/pytorch/issues/56697
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604353856 - test return value~, fixed in master
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604354153 - use C++ RAII~, fixed in master
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604379873 - dims/size checks
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604968109
 
