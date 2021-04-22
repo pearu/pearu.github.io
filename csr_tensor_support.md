@@ -111,10 +111,10 @@ would not expect much performance gain.
 
 ## Testing
 
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604348471 - see modern COO testing
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - don't set default_dtype_type
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - avoid using numpy
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r608675701 - inefficient CSR samples
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r604348471 - see modern COO testing https://github.com/pytorch/pytorch/issues/56371
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - don't set default_dtype_type https://github.com/pytorch/pytorch/issues/56369
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - avoid using numpy https://github.com/pytorch/pytorch/issues/56371
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r608675701 - inefficient CSR samples https://github.com/pytorch/pytorch/issues/56371
 
 ## Avoid COO-isms
 
@@ -144,7 +144,7 @@ would not expect much performance gain.
 
 ## Main features missing
 
-- CUDA support in the CSR layout.
+- CUDA support in the CSR layout https://github.com/pytorch/pytorch/issues/56485
 - Inference with Autograd - this is relevant also to COO layout as to
   sparse tensor support in general.
 - Generalization of CSR as N-dimensional tensor
