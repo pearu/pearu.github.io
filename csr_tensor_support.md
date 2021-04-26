@@ -56,8 +56,8 @@ tasks for completing the CSR layout support.
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r603537183 - eliminate memory format, https://github.com/pytorch/pytorch/issues/56697
 - ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604353856 - test return value~, fixed in master
 - ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604354153 - use C++ RAII~, fixed in master
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604379873 - dims/size checks
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604968109
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r604379873 - dims/size checks, we'll need implement tests for bad inputs
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604968109 - code repetitions~, looks resolved to me
 
 ## MKL and Windows build issues
 
@@ -75,6 +75,9 @@ tasks for completing the CSR layout support.
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r603538191 - expect one int type
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604349014 - why not default to int32?
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604969458
+
+See also https://github.com/pytorch/pytorch/issues/56959 that summarizes
+the background of the three discussion items above.
 
 IIUC, it would be preferred to support a single dtype for CSR indices
 tensors. (Explain why this preference).  While COO uses only int64 as
