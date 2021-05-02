@@ -104,7 +104,7 @@ than COO.
 
 ## COO to CSR conversion
 
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604346660 - slow because implemented in Python, about 3x slower than gcs
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r604346660 - slow because implemented in Python, about 3x slower than gcs, https://github.com/pytorch/pytorch/issues/57381
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r608326213 - dense-csr without coo
 
 Not much to discuss here: for efficiency, implement the direct dense
