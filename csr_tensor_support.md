@@ -114,16 +114,16 @@ would not expect much performance gain.
 
 ## Testing
 
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604348471 - see modern COO testing https://github.com/pytorch/pytorch/issues/56371
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - don't set default_dtype_type https://github.com/pytorch/pytorch/issues/56369
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - avoid using numpy https://github.com/pytorch/pytorch/issues/56371
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r608675701 - inefficient CSR samples https://github.com/pytorch/pytorch/issues/56371
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604348471 - see modern COO testing https://github.com/pytorch/pytorch/issues/56371~
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - don't set default_dtype_type https://github.com/pytorch/pytorch/issues/56369~, fixed
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - avoid using numpy https://github.com/pytorch/pytorch/issues/56371~, fixed
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r608675701 - inefficient CSR samples https://github.com/pytorch/pytorch/issues/56371~, fixed
 
 ## Avoid COO-isms
 
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604364248
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604365304 - empty indices
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604369842 - aliasing, what happens to CSR after resizing values?
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r604365304 - empty indices, https://github.com/pytorch/pytorch/issues/56696, WIP: https://github.com/pytorch/pytorch/pull/56744
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r604369842 - aliasing, what happens to CSR after resizing values? CSR invariants!
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604379081 - always require contiguity?
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604379537 - device testing
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604384386 - introduce sparse_csr namespace
