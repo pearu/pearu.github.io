@@ -46,18 +46,18 @@ tasks for completing the CSR layout support.
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r562646336, https://github.com/pytorch/pytorch/pull/50937#discussion_r562648465 - hardcoded development style
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r562656595 - docs
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r563184880 - VS build failure
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r563185162 - int32 vs int64 performance
-- https://github.com/pytorch/pytorch/pull/50937#issuecomment-766777337 - is it fixed?
-- https://github.com/pytorch/pytorch/pull/50937#issuecomment-766778930 - is it fixed?
-- https://github.com/pytorch/pytorch/pull/50937#issuecomment-803905480 - is it fixed?
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r603533421 - is it fixed?
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r603535187 - is it fixed?
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r603536011 - resize internal tensors for memory efficiency
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r603537183 - eliminate memory format
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604353856 - test return value
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604354153 - use C++ RAII
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604379873 - dims/size checks
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604968109
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r563185162 - int32 vs int64 performance, releated to https://github.com/pytorch/pytorch/issues/56959
+- ~https://github.com/pytorch/pytorch/pull/50937#issuecomment-766777337 - is it fixed?~ yes, csr tensor repr is ok.
+- ~https://github.com/pytorch/pytorch/pull/50937#issuecomment-766778930 - is it fixed?~ yes, csr tensor size is deduced from indices
+- ~https://github.com/pytorch/pytorch/pull/50937#issuecomment-803905480 - is it fixed?~ yes, docs look ok, although doc build success is not verified
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r603533421 - is it fixed?, no: decide if `crow_indices()` should return `Tensor` or `const Tensor &`
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r603535187 - is it fixed?, no AFICT: need single point entry for constructing csr tensor
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r603536011 - resize internal tensors for memory efficiency https://github.com/pytorch/pytorch/issues/56696, https://github.com/pytorch/pytorch/pull/56744
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r603537183 - eliminate memory format, https://github.com/pytorch/pytorch/issues/56697
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604353856 - test return value~, fixed in master
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604354153 - use C++ RAII~, fixed in master
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r604379873 - dims/size checks, we'll need implement tests for bad inputs
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604968109 - code repetitions~, looks resolved to me
 
 ## MKL and Windows build issues
 
@@ -72,9 +72,12 @@ tasks for completing the CSR layout support.
 
 ## CSR indices support int32 and int64
 
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r603538191 - expect one int type
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604349014 - why not default to int32?
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604969458
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r603538191 - expect one int type~
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604349014 - why not default to int32?~
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604969458~
+
+See also https://github.com/pytorch/pytorch/issues/56959 that summarizes
+the background of the three discussion items above.
 
 IIUC, it would be preferred to support a single dtype for CSR indices
 tensors. (Explain why this preference).  While COO uses only int64 as
@@ -101,7 +104,7 @@ than COO.
 
 ## COO to CSR conversion
 
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604346660 - slow because implemented in Python
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r604346660 - slow because implemented in Python, about 3x slower than gcs, https://github.com/pytorch/pytorch/issues/57381
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r608326213 - dense-csr without coo
 
 Not much to discuss here: for efficiency, implement the direct dense
@@ -111,16 +114,16 @@ would not expect much performance gain.
 
 ## Testing
 
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604348471 - see modern COO testing
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - don't set default_dtype_type
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - avoid using numpy
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r608675701 - inefficient CSR samples
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r604348471 - see modern COO testing https://github.com/pytorch/pytorch/issues/56371~
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - don't set default_dtype_type https://github.com/pytorch/pytorch/issues/56369~, fixed
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r608327057 - avoid using numpy https://github.com/pytorch/pytorch/issues/56371~, fixed
+- ~https://github.com/pytorch/pytorch/pull/50937#discussion_r608675701 - inefficient CSR samples https://github.com/pytorch/pytorch/issues/56371~, fixed
 
 ## Avoid COO-isms
 
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604364248
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604365304 - empty indices
-- https://github.com/pytorch/pytorch/pull/50937#discussion_r604369842 - aliasing, what happens to CSR after resizing values?
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r604365304 - empty indices, https://github.com/pytorch/pytorch/issues/56696, WIP: https://github.com/pytorch/pytorch/pull/56744
+- https://github.com/pytorch/pytorch/pull/50937#discussion_r604369842 - aliasing, what happens to CSR after resizing values? CSR invariants!
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604379081 - always require contiguity?
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604379537 - device testing
 - https://github.com/pytorch/pytorch/pull/50937#discussion_r604384386 - introduce sparse_csr namespace
@@ -144,7 +147,7 @@ would not expect much performance gain.
 
 ## Main features missing
 
-- CUDA support in the CSR layout.
+- CUDA support in the CSR layout https://github.com/pytorch/pytorch/issues/56485
 - Inference with Autograd - this is relevant also to COO layout as to
   sparse tensor support in general.
 - Generalization of CSR as N-dimensional tensor
