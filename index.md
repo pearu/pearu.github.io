@@ -1,5 +1,6 @@
 # Pearu's blogs
 
+- [CSR format naming conventions](csr_naming_conventions.md) - May 10, 2021
 - [PyTorch CSR tensor invariants](csr_tensor_invariants.md) - May 6, 2021
 - [PyTorch CSR tensor support](csr_tensor_support.md) - April 7, 2021
 - [Tensor creation operations in PyTorch](tensor_creation_operations.md) - March 22, 2021
