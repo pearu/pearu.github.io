@@ -1,11 +1,11 @@
-# CSR format notations
+# CSR format naming conventions
 
 |            |                 |
 | ---------- | --------------- |
 | Author     | Pearu Peterson  |
 | Created    | 2021-05-10      |
 
-The aim of this blog post is to review the notations used in different software implementing CSR format support.
+The aim of this blog post is to review naming conventions used in various software that implement CSR format support.
 
 The CSR format, originating from mid-1960, was introduced to represent two-dimensional arrays (matrices) by three one-dimensional arrays:
 - explicitly specified values, dimension is `nnz`
@@ -16,10 +16,10 @@ where `nrows` denotes the number of array rows and `nnz` denotes the number of s
 
 Note: the notation `nnz` is an abreviaton from the "number of non-zero" elements. However, the "non-zero" part
 should not be taken literally because nothing in the CSR format specification requires that the specified
-values must be non-zero. The more appropiate term is the "number of specified elements" with notation `nse` but
+values must be non-zero. The more appropiate term would be the "number of specified elements" (NSE) but
 many software still use `nnz` while allowing explicit zero values.
 
-The following table summarizes the CSR format notations implemented in existing software and as used in various papers
+The following table summarizes the CSR format naming conventions used in existing software as well as elsewhere:
 
 | Software | NSE | values | extents of rows | column indices |
 | -------- | ----- | ------ | --------------- | -------------- |
@@ -43,6 +43,13 @@ The following table summarizes the CSR format notations implemented in existing 
 Notes:
 - Using `NNZ` for the number of specified elements is dominant. Documentation of various software define it as the "number of non-zero" elements and in next sentense these may mention that explicit zero values are allowed. In summary, the usage of NNZ can be characterized as "the most consistently used inconsistency between the notation and the actual definition".
 - Some software just don't care about the clarity of the used naming convention and appear to consider the naming convention as implementation detail: `ia`, `w`, etc
-- Software that use `row` or `row_index` or `rowIndex` for naming the "extents of rows" array are not good role models for choosing naming conventions (IMHO) because the given namings are misleading in the sense that the values of the "extents of rows" array are never the row indices (but are inputs to row index generators).
-- There are two dominant alternatives for naming the "extents of rows" that are derived from phrases "row pointers" and "index pointers": `RowPtr`, `rowptr`, `row_ptr`, `indptr`.
+- Software that use `row` or `row_index` or `rowIndex` for naming the "extents of rows" array are not really good role models for choosing naming conventions (IMHO) because the given namings are misleading in the sense that the values of the "extents of rows" array are never the row indices (but are input parameters to row index generators).
+- There is a dominant naming convenion for the "extents of rows" that is derived from the phrase "row/index pointers": `RowPtr`, `rowptr`, `row_ptr`, `indptr`. However, the usage of "pointers" may be confusing for C/C++ programmers because in C/C++ language the term is used as "a memory address of a variable".
 - PyTorch currently uses `crow_indices` for the "extents of rows" and is derived from phrase "Compressed ROW INDICES". However, unwitting user may relate "crow" to a bird [Crow](https://en.wikipedia.org/wiki/Crow).
+
+## Conclusions
+
+The current choice of PyTorch naming convention is satisfactory (IMHO) but not ideal mainly because of `crow_indices` choice that is not used elsewhere and has birdish flavor. On the other hand, there appears to be no naming convention that would be ideal in general and therefore I think that PyTorch has a freedom as well as opportinity to introduce better naming convention from other software with respect to sparse tensor formats. The naming convention must be
+- pythonic as most PyTorch users are Python users
+- acceptable for C++ programs as PyTorch code base is C++ heavy
+- accurate in the sense that naming will match with the actual definition/constraints of the notations, or at least, will not be misleading.
