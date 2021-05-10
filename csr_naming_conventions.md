@@ -5,7 +5,7 @@
 | Author     | Pearu Peterson  |
 | Created    | 2021-05-10      |
 
-The aim of this blog post is to review naming conventions used in various software that implement CSR format support.
+The aim of this blog post is to review naming conventions used in various software that implement CSR format support. The need for this review originates from a [PyTorch issue comment](https://github.com/pytorch/pytorch/pull/57274#issuecomment-833697078).
 
 The CSR format, originating from mid-1960, was introduced to represent two-dimensional arrays (matrices) by three one-dimensional arrays:
 - explicitly specified values, dimension is `nnz`
