@@ -19,7 +19,7 @@ should not be taken literally because nothing in the CSR format specification re
 values must be non-zero. The more appropiate term would be the "number of specified elements" (NSE) but
 many software still use `nnz` while allowing explicit zero values.
 
-The following table summarizes the CSR format naming conventions used in existing software as well as elsewhere:
+The following table summarizes the CSR format naming conventions used in existing software as well as elsewhere (ordering is arbitrary):
 
 | Software | NSE | values | extents of rows | column indices |
 | -------- | ----- | ------ | --------------- | -------------- |
