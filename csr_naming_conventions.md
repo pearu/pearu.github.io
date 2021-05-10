@@ -52,4 +52,4 @@ Notes:
 The current choice of PyTorch naming convention is satisfactory (IMHO) but not ideal mainly because of `crow_indices` choice that is not used elsewhere and has birdish flavor. On the other hand, there appears to be no naming convention that would be ideal in general and therefore I think that PyTorch has a freedom as well as opportinity to introduce better naming convention from other software with respect to sparse tensor formats. The naming convention must be
 - pythonic as most PyTorch users are Python users
 - acceptable for C++ programs as PyTorch code base is C++ heavy
-- accurate in the sense that naming will match with the actual definition/constraints of the notations, or at least, will not be misleading.
+- accurate in the sense that naming will match with the actual definition/constraints of the notations, or at least, the naming choice should not be misleading.
