@@ -63,7 +63,7 @@ A tensor with CSR layout has the following members (as defined by constructor `s
 
 3.10 `values.size() == (nnz,)` or `values.numel() == nnz`
 
-3.11 `numel() == nrows * ncols` is the number of indexable elements [NOT IMPLEMENTED]
+3.11 `numel() == nrows * ncols` is the number of indexable elements
 
 ## Device invariants
 
@@ -111,6 +111,6 @@ According to [PR 57274](https://github.com/pytorch/pytorch/pull/57274), creating
       - `values_ = values`
 
 - `sparse_csr_tensor(crow_indices, col_indices, values)`
-  - `size = (crow_indices.numel() - 1, col_indices.max() + 1`
+  - `size = (crow_indices.numel() - 1, col_indices.max() + 1)`
   - `_validate_sparse_csr_tensor_args(crow_indices, col_indices, values, size)`
   - `_sparse_csr_tensor_unsafe(crow_indices, col_indices, values, size)`
