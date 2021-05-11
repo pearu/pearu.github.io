@@ -92,31 +92,25 @@ A tensor with CSR layout has the following members (as defined by constructor `s
 According to [PR 57274](https://github.com/pytorch/pytorch/pull/57274), creating a CSR tensor has the following function calling tree with the corresponding invariant checks:
 
 - `sparse_csr_tensor(crow_indices, col_indices, values, size)`
-   - checks 4.1, 2.4
-   - `check_csr_invariants(crow_indices, col_indices, values)`
-     - checks `crow_indices.numel() >= 1`, 3.2, 3.3, 3.4, 5.2(crow_indices[-1]==col_indices.numel()), 5.1
-   - checks 3.8
-   - `new_csr_tensor`
-     - checks 2.4
-   - `resize_and_clear_(nnz, size)`
-     - `crow_indices.resize(size[0] + 1)` enforces 3.8
-     - `col_indices.resize(nnz)` enforces 3.9
-     - `values.resize(nnz)` enforces 3.10
-     - `sizes_and_strides_.set_sizes(size)`
-   - `set_member_tensors(crow_indices, col_indices, values)`
-     - checks 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 3.5, 3.6, 3.7, 4.2, 4.3, 4.4, 3.9==3.10
+  - `_validate_sparse_csr_tensor_args(crow_indices, col_indices, values, size)`
+    - 2.2, 3.6, 2.1, 3.5, 2.3, 3.7, 3.1, 3.2, 3.3, 3.4, 3.8, 3.9/3.10, 5.1, 5.2, 5.3, 5.4, 5.5
+  - `_sparse_csr_tensor_unsafe(crow_indices, col_indices, values, size)`
+    - 4.1, 2.4
+    - `new_csr_tensor()`
+      - 2.4
+    - `resize_and_clear_(nnz=values.numel(), size)`
+      - `crow_indices_.resize(size[0]+1)`  3.8
+      - `col_indices_.resize(nnz)`  3.9
+      - `values_.resize(nnz)` 3.10
+      - `sizes_and_strides_.set_sizes(size)` 3.1
+      - `refresh_numel()` 3.11
+    - `set_member_tensors(crow_indices, col_indices, values)`
+      - 1.1, 1.2, 1.3, 1.4, 4.4, 4.2, 4.3
+      - `crow_indices_ = crow_indices`
+      - `col_indices_ = col_indices`
+      - `values_ = values`
+
 - `sparse_csr_tensor(crow_indices, col_indices, values)`
-  - checks 2.4
-  - `check_csr_invariants(crow_indices, col_indices, values)`
-  - `size = (crow_indices.numel()-1, col_indices.max()+1)`, enforces 3.1, 3.8, 5.5
-  - `sparse_csr_tensor(crow_indices, col_indices, values, size)`
-    - see above
-
-Missing checks:
-- 1.5 - what is the exception when not met?
-- `len(size) == 2` in 3.1
-- 3.11 - numel is not implemented for CSR tensor
-- 5.3, 5.4, 5.5
-
-Notes:
-- `sparse_csr_tensor(crow_indices, col_indices, values)` has many duplicated checks
+  - `size = (crow_indices.numel() - 1, col_indices.max() + 1`
+  - `_validate_sparse_csr_tensor_args(crow_indices, col_indices, values, size)`
+  - `_sparse_csr_tensor_unsafe(crow_indices, col_indices, values, size)`
