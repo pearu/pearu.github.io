@@ -1,10 +1,9 @@
+---
+author: pearu peterson
+created: 2021-05-14
+---
 
 # What is array?
-
-|            |                 |
-| ---------- | --------------- |
-| Author     | Pearu Peterson  |
-| Created    | 2021-05-14      |
 
 This blog post is motivated from a question what is a 0-dimensional array, it's relation to array values, and how to represent such arrays in a programming language. Here the answer will be given only to the first parts of the question (sorry..).
 
