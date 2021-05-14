@@ -49,7 +49,7 @@ would apply to sparse array storage formats that use the so-called fill-value wh
 
 From this definition follows:
 
-> a 0-dimensional array is a non-empty array that reference set consists of a zero-length tuple.
+> a 0-dimensional array is a non-empty array that reference set consists of a single element: a zero-length tuple.
 
 and
 
