@@ -92,7 +92,7 @@ A tensor with CSR layout has the following members (as defined by constructor `s
 According to [PR 57274](https://github.com/pytorch/pytorch/pull/57274), creating a CSR tensor has the following function calling tree with the corresponding invariant checks:
 
 - `set_member_tensors(crow_indices, col_indices, values, size)`
-  - 1.1, 1.2, 1.3, 1.4, (1.5 is implicit)
+  - 1.1, 1.2, 1.3, 1.4, (1.5 is implicit), 4.2, 4.3, 4.4
   - `crow_indices_ = crow_indices`
   - `col_indices_ = col_indices`
   - `values_ = values`
