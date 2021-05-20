@@ -91,24 +91,28 @@ A tensor with CSR layout has the following members (as defined by constructor `s
 
 According to [PR 57274](https://github.com/pytorch/pytorch/pull/57274), creating a CSR tensor has the following function calling tree with the corresponding invariant checks:
 
+- `set_member_tensors(crow_indices, col_indices, values, size)`
+  - 1.1, 1.2, 1.3, 1.4, (1.5 is implicit)
+  - `crow_indices_ = crow_indices`
+  - `col_indices_ = col_indices`
+  - `values_ = values`
+  - `set_sizes(size)`
+  - `refresh_numel()`, 3.11
+
+- `_validate_sparse_csr_tensor_args(crow_indices, col_indices, values, size)`
+  - 2.1, 3.5, 2.2, 3.6, 2.3, 3.7, 3.1, 3.2, 3.3, 3.4, 3.8, 3.9, 3.10, 5.1, 5.2, 5.3, 5.4, 5.5
+
+- `new_csr_tensor()`
+  - 2.4, 4.1
+
+- `_sparse_csr_tensor_unsafe(crow_indices, col_indices, values, size)`
+  - 4.1(!), 2.4(!)
+  - `new_csr_tensor()`
+  - `set_member_tensors(crow_indices, col_indices, values, size)`
+
 - `sparse_csr_tensor(crow_indices, col_indices, values, size)`
   - `_validate_sparse_csr_tensor_args(crow_indices, col_indices, values, size)`
-    - 2.2, 3.6, 2.1, 3.5, 2.3, 3.7, 3.1, 3.2, 3.3, 3.4, 3.8, 3.9/3.10, 5.1, 5.2, 5.3, 5.4, 5.5
   - `_sparse_csr_tensor_unsafe(crow_indices, col_indices, values, size)`
-    - 4.1, 2.4
-    - `new_csr_tensor()`
-      - 2.4
-    - `resize_and_clear_(nnz=values.numel(), size)`
-      - `crow_indices_.resize(size[0]+1)`  3.8
-      - `col_indices_.resize(nnz)`  3.9
-      - `values_.resize(nnz)` 3.10
-      - `sizes_and_strides_.set_sizes(size)` 3.1
-      - `refresh_numel()` 3.11
-    - `set_member_tensors(crow_indices, col_indices, values)`
-      - 1.1, 1.2, 1.3, 1.4, 4.4, 4.2, 4.3
-      - `crow_indices_ = crow_indices`
-      - `col_indices_ = col_indices`
-      - `values_ = values`
 
 - `sparse_csr_tensor(crow_indices, col_indices, values)`
   - `size = (crow_indices.numel() - 1, col_indices.max() + 1)`
