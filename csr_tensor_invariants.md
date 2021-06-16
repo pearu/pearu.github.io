@@ -81,7 +81,9 @@ A tensor with CSR layout has the following members (as defined by constructor `s
 
 5.2 `crow_indices[nrows] == nnz`
 
-5.3 `crow_indices[i-1] <= crow_indices[i]` for all `i=1,...,nrows`
+5.3 OLD: `crow_indices[i-1] <= crow_indices[i]` for all `i=1,...,nrows`
+
+5.3 NEW: `0 <= crow_indices[i] - crow_indices[i-1] <= ncols` for all `i=1,...,nrows`
 
 5.4 `0 <= col_indices.min()`
 
