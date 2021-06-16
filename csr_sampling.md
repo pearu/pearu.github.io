@@ -30,6 +30,18 @@ col_indices = torch.randint(0, n_cols, size=[actual_nnz])
 values = make_tensor([actual_nnz], low=-1, high=1)
 ```
 
-Notes:
-- while `col_indices` and `values` are random, `crow_indices` are not. This means that the current sampler always
-  produces CSR tensors with highly regular `crow_indices`
+Pros:
+- the algorithm is very simple
+
+Cons:
+- while `col_indices` and `values` are random, `crow_indices` are not. This means that this sampler always
+  produces CSR tensors with regular `crow_indices` with a specific structure while other possible structures are
+  not generated for some fixed `nnz` value no matter how large is the number of samples. For instance, for most of the possible 
+- given the input `nnz` does not guarantee that the number of specified values in the example will be the same
+  (expect when `nnz` is a integer multiplier of `n_rows`).
+
+Example: the following animation generates a series of samples with specified `nnz` varying from `0` to `n_rows * c_cols`.
+
+Observations:
+- for a wide range of `nnz` values, rows with no entries or rows with all columns specified, are never generated
+- only for few specified values of `nnz` equals with the `nnz` of the sample.
