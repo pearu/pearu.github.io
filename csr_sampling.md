@@ -40,8 +40,13 @@ Cons:
 - given the input `nnz` does not guarantee that the number of specified values in the example will be the same
   (expect when `nnz` is a integer multiplier of `n_rows`).
 
-Example: the following animation generates a series of samples with specified `nnz` varying from `0` to `n_rows * c_cols`.
+As an example, the following animation generates a series of samples with specified `nnz` varying from `0` to `n_rows * c_cols`.
+
+![PyTorch current samples: 17x5](distribute_column_indices_17x5_pytorch.gif)
 
 Observations:
 - for a wide range of `nnz` values, rows with no entries or rows with all columns specified, are never generated
 - only for few specified values of `nnz` equals with the `nnz` of the sample.
+
+
+![PyTorch new samples: 17x5](distribute_column_indices_17x5_new.gif)
