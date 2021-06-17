@@ -74,7 +74,7 @@ will be equal to the specified `nnz` parameter, as well as, ensure that samples 
 
 ## Sampling of `crow_indices`
 
-First, let us consider the following model of `crow_indices`:
+To compute `crow_indices`, we are using the following model:
 
 ```python
 crow_indices = cumsum([0] + counts)
@@ -89,10 +89,69 @@ where `counts` is a list of integers with the following properties:
 - `counts[-1] - counts[0]` is as large as possible to maximize structural variability
 - the distibution of different count values is as uniform as possible to have some balance between normal and the edge cases
 
-In addition, we require that the computation of `counts` has complexity not greater than `O(n_rows)`.
+In addition, we require that the computation of `counts` has complexity not greater than `O(max(n_rows, n_cols))`.
 
+Clearly, there exists many solutions to `counts` that satisfy the above listed properties.
 
+Here we propose a new algorithm that is based on computing the `counts` values from the following
+histogram:
 
-An example of the new sampling method:
+```
+      ^ counts is the number of columns per row
+      |
+      |
+
+        *   *   *   *   ###
+       **  **  **  **+ o###
+      *** *** *** ***+oo###
+      @@@@@@@@@@@@@@@@@@###
+      @@@@@@@@@@@@@@@@@@###      --> row indices
+```
+where different parts of the histogram are denoted as follows:
+- `<space>` - no counts
+- `+` - final correction
+- `o` - an incomplete sawtooth
+- `*` - a sequence of full sawteeth
+- `@` - lower rectangle
+- `#` - right rectangle
+
+Pseudo-code for computing the above histogram is as follows:
+
+```python
+# Inputs: n_rows, n_cols, nnz
+# Outputs: counts
+
+counts = zeros(n_rows)
+
+def N(n, m):
+    # compute the total number of counts in the sequence of sawteeth
+    M = (n_cols - m) * (n_cols - m + 1) // 2
+    K = (n_rows - n) % (n_cols - m + 1)
+    return M * ((n_rows - n) // (n_cols - m + 1)) + K * (K - 1) // 2
+
+# Find n such that N(n, 0) == 0 or nnz < max(N(n, 0), n_cols)
+if n > 0:
+    counts[-n:] = n_cols                        - this fills the region denoted by #
+
+# Find m such that N(n, m) == 0 or nnz - n * n_cols < max(N(n, m), n_cols)
+if m > 0:
+    counts[:n_rows - n] = m                     - this fills the region denoted by @
+
+if N(n, m) == 0:  # no sawteeth
+    counts[0] = nnz - n * n_cols - m * n_rows
+else:
+    M = (n_cols - m) * (n_cols - m + 1) // 2
+    q = ((nnz - n * n_cols - m * n_rows) // M) * (n_cols - m + 1)
+    # Find k such that k*(k+1)/2 <= (nnz - n * n_cols - m * n_rows) % M
+    corr = (nnz - n * n_cols - m * n_rows) % M - k * (k + 1) // 2
+    counts[:q] = arange(q) % (n_cols - m + 1)   - this fills the region denoted by *
+    counts[q:q+k+1] += arange(k + 1)            - this fills the region denoted by o
+    counts[q] += corr                           - this fills the region denoted by +
+```
+
+Notice that the filling of `counts` can use vectorized operations.
+To solve the equations `N(n, m) == 0` for integers `n` and `m`, one can use the bisection algorithm.
+
+For example, the following animation uses the above described construction of `crow_indices`:
 
 ![PyTorch 17x5 sample - new](distribute_column_indices_17x5_new.gif)
