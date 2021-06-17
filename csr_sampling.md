@@ -188,3 +188,8 @@ Observations:
 - With the proposed sampling method the variability of indices structure
   is maximized for almost all `nnz` values. The sparsity of CSR samples varies
   within full range (from 0% to 100% of sparsity) when using the proposed sampling method.
+
+## Final notes
+
+The animations produced in this blog post are generated using the Python script [distribute_column_indices.py](data/distribute_column_indices.py).
+The same script contains the prototype implementation of the proposed CSR sampling algorithm.
