@@ -42,7 +42,7 @@ Cons:
 
 As an example, the following animation generates a series of samples with specified `nnz` varying from `0` to `n_rows * c_cols`.
 
-![PyTorch 17x5 sample - current](distribute_column_indices_17x5_pytorch.gif)
+![PyTorch 17x5 sample - current](data/distribute_column_indices_17x5_pytorch_random.gif)
 
 Observations:
 - for a wide range of `nnz` values, rows with no entries or rows with all columns specified,
@@ -154,4 +154,25 @@ To solve the equations `N(n, m) == 0` for integers `n` and `m`, one can use the 
 
 For example, the following animation uses the above described construction of `crow_indices`:
 
-![PyTorch 17x5 sample - new](distribute_column_indices_17x5_new.gif)
+![PyTorch 17x5 sample - new](data/distribute_column_indices_17x5_new_random.gif)
+
+Observations:
+- the `nnz` of the proposed CSR sample is always equal to the specified value of `nnz`
+- the proposed CSR sample contains rows with all possible number of columns
+
+
+## More comparisons
+
+Another way to compare the sampling methods is to disable randomization. Here follow the
+animations of the current and proposed samplings of CSR tensors:
+
+![PyTorch 17x5 sample - pytorch](data/distribute_column_indices_17x5_pytorch_norandom.gif)
+![PyTorch 17x5 sample - new](data/distribute_column_indices_17x5_new_norandom.gif)
+
+Observations:
+- As seen above, the current sampling method in PyTorch produces the same indices structure
+  for all `nnz` values. In fact, the sparsity of the CSR tensors is basically constant and it is
+  impossible to generate low sparsity CSR samples with the current PyTorch sampling method.
+- With the proposed sampling method the variability of indices structure
+  is maximized for almost all `nnz` values. The sparsity of CSR samples varies
+  within full range (from 0% to 100% of sparsity) when using the proposed sampling method.
