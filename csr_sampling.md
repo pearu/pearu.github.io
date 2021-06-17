@@ -5,7 +5,7 @@ created: 2021-06-16
 
 # CSR random sampling
 
-This blog post is inspired by https://github.com/pytorch/pytorch/issues/59379 that seeks
+This blog post is inspired by [PyTorch issue 59379](https://github.com/pytorch/pytorch/issues/59379) that seeks
 for a better sampling method for generating random CSR tensors to be used for testing PyTorch CSR
 tensor support. In the following, we'll review the currently used method, then define what is a good
 sampling method for testing purposes, and finally, propose a new sampling method for generating CSR tensors
