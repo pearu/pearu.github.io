@@ -1,5 +1,6 @@
 # Pearu's blogs
 
+- [CSR sampling methods](csr_sampling.md) - June 16, 2021
 - [What is array?](what_is_array.md) - May 14, 2021
 - [CSR format naming conventions](csr_naming_conventions.md) - May 10, 2021
 - [PyTorch CSR tensor invariants](csr_tensor_invariants.md) - May 6, 2021
