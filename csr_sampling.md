@@ -103,11 +103,11 @@ In addition, we require that the computation of `counts` has complexity not grea
 
 Clearly, there exists many solutions to `counts` that satisfy the above listed properties.
 
-Here we propose a new algorithm that is based on computing the `counts` values from the following
-histogram:
+Here we propose a new algorithm that is based on computing the column `counts` per row
+from the following histogram:
 
 ```
-      ^ counts is the number of columns per row
+      ^ count is the height of the histogram
       |
       |
 
@@ -139,24 +139,24 @@ def N(n, m):
     K = (n_rows - n) % (n_cols - m + 1)
     return M * ((n_rows - n) // (n_cols - m + 1)) + K * (K - 1) // 2
 
-# Find n such that N(n, 0) == 0 or nnz < max(N(n, 0), n_cols)
+# Find n such that N(n, 0) == 0 or nnz - n * n_cols < max(N(n, 0), n_cols)
 if n > 0:
     counts[-n:] = n_cols                        - this fills the region denoted by #
 
-# Find m such that N(n, m) == 0 or nnz - n * n_cols < max(N(n, m), n_cols)
+# Find m such that N(n, m) == 0 or nnz - n * n_cols - m * (n_rows - n) < max(N(n, m), n_rows - n)
 if m > 0:
     counts[:n_rows - n] = m                     - this fills the region denoted by @
 
 if N(n, m) == 0:  # no sawteeth
     counts[0] = nnz - n * n_cols - m * n_rows
 else:
-    M = (n_cols - m) * (n_cols - m + 1) // 2
-    q = ((nnz - n * n_cols - m * n_rows) // M) * (n_cols - m + 1)
-    # Find k such that k*(k+1)/2 <= (nnz - n * n_cols - m * n_rows) % M
-    corr = (nnz - n * n_cols - m * n_rows) % M - k * (k + 1) // 2
-    counts[:q] = arange(q) % (n_cols - m + 1)   - this fills the region denoted by *
-    counts[q:q+k+1] += arange(k + 1)            - this fills the region denoted by o
-    counts[q] += corr                           - this fills the region denoted by +
+    q, r = divmod(nnz - n * n_cols - m * (n_rows - n), (n_cols - m) * (n_cols - m + 1) // 2)
+    p = q * (n_cols - m + 1)
+    # Find k such that k*(k+1)/2 <= r
+    corr = r - k * (k + 1) // 2
+    counts[:p] = arange(p) % (n_cols - m + 1)   - this fills the region denoted by *
+    counts[p:p+k+1] += arange(k + 1)            - this fills the region denoted by o
+    counts[p] += corr                           - this fills the region denoted by +
 ```
 
 Notice that the filling of `counts` can use vectorized operations.
