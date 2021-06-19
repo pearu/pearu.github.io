@@ -87,6 +87,8 @@ A tensor with CSR layout has the following members (as defined by constructor `s
 
 5.5 `col_indices.max() < ncols`
 
+5.6 `col_indices[crow_indinces[i-1]:crow_indinces[i]]` must be sorted and with distinct values for all `i=1,...,nrows` ([required by cuSparse](https://docs.nvidia.com/cuda/cusparse/index.html#csr-format))
+
 ## Invariant checks
 
 According to [PR 57274](https://github.com/pytorch/pytorch/pull/57274), creating a CSR tensor has the following function calling tree with the corresponding invariant checks:
