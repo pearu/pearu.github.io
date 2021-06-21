@@ -192,4 +192,4 @@ Observations:
 ## Final notes
 
 The animations produced in this blog post are generated using the Python script [distribute_column_indices.py](data/distribute_column_indices.py).
-The same script contains the prototype implementation of the proposed CSR sampling algorithm.
+The same script contains the prototype implementation of the proposed CSR sampling algorithm. For production implementation, see [PyTorch PR 60283](https://github.com/pytorch/pytorch/pull/60283).
