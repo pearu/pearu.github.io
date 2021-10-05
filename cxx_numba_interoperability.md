@@ -30,7 +30,7 @@ sum, all these object transformations may build up a considerable
 overhead on calling otherwise highly efficient C++ library functions
 from Python.
 
-Another difficulty with calling C++ library functions from Numba, or
+Another difficulty with calling C++ library functions from Numba
 originates from
 [name-mangling](https://en.wikipedia.org/wiki/Name_mangling) that C++
 compilers apply to function names in order to support function/method
@@ -173,8 +173,9 @@ $ ls *libfoo*
 cxx2py_libfoo.cpp  libcxx2py_libfoo.so  libfoo.py
 ```
 
-Notice that the generated ``cxx2py_libfoo.cpp`` file contains
-light-weight functions for determining the address of C++ functions:
+Notice that the generated
+[cxx2py_libfoo.cpp](cxx2py/cxx2py_libfoo.cpp) file contains
+light-weight C functions for returning the addresses of C++ functions:
 ```c++
 #include <memory>
 #include <cstdint>
@@ -201,7 +202,7 @@ extern "C" intptr_t get_ns__BarCls__fun_address() {
 The ``cxx2py_libfoo.cpp`` file is built into the shared library
 ``libcxx2py_libfoo.so`` when ``--build`` flag is used.
 
-Let's test the ctypes wrapper module in Python:
+Let's test the ctypes wrapper module [libfoo](cxx2py/libfoo.py) in Python:
 ```bash
 $ export LD_LIBRARY_PATH=.  # this makes sure that ctypes is able to find the shared library
 $ python
