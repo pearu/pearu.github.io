@@ -58,7 +58,7 @@ runtime.
 A Python script [cxx2py.py](cxx2py/cxx2py.py) is provided that
 auto-generates, from user-supplied C++ header and source files, the
 wrapper library as well as a Python
-[ctypes](https://docs.python.org/3/library/ctypes.html wrapper
+[ctypes](https://docs.python.org/3/library/ctypes.html) wrapper
 module. The Python module contains ``ctypes`` definitions of C++
 library functions that Numba jitted functions are able to call
 directly without requiring the expensive object transformations
