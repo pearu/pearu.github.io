@@ -243,6 +243,6 @@ in foo(7)
 In this post, we outlined a method of calling C++ library functions
 from Python with emphasis of using these from Numba jitted functions
 with minimal overhead. While the provided tool
-[cxx2py_libfoo.cpp](cxx2py/cxx2py_libfoo.cpp) currently supports only
+[cxx2py.py](cxx2py/cxx2py.py) currently supports only
 wrapping C++ functions with scalar inputs and return values, it can be
 easily extended to support other C++ features as well.
