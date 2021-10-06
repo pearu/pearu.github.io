@@ -172,7 +172,7 @@ As a quick test, try running:
   LD_LIBRARY_PATH=. python -c "import untitled as m; print(m.__all__)"
 ```
 that will create three files into the current directory:
-```
+```bash
 $ ls *libfoo*
 cxx2py_libfoo.cpp  libcxx2py_libfoo.so  libfoo.py
 ```
@@ -209,6 +209,8 @@ The ``cxx2py_libfoo.cpp`` file is built into the shared library
 Let's test the wrapper module [libfoo](cxx2py/libfoo.py) in Python:
 ```bash
 $ export LD_LIBRARY_PATH=.  # this makes sure that ctypes is able to find the shared library
+```
+```python
 $ python
 >>> import libfoo
 >>> libfoo.__all__
@@ -227,7 +229,7 @@ thanks to [ctypes](https://docs.python.org/3/library/ctypes.html)!.
 
 Moreover, the C++ library functions can be called from Numba jitted
 functions as well. For example:
-```
+```python
 >>> import numba
 >>> @numba.njit
 ... def fun(x):
