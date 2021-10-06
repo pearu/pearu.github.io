@@ -17,89 +17,91 @@ While there exists ways to wrap C++ codes to Python, calling these
 wrappers from Numba jittied functions may not be as straightforward
 and efficient as one would hope. The underlying problem to inefficency
 is that the Python/C++ wrappers are designed to be called on Python
-objects. For instance, with keeping the aim of this post in mind, a
+objects. For instance, with keeping in mind the aim of this post, a
 call to a Numba jitted function would involve converting a Python
 object to a low-level object, say, to some C/C++ equivalent intrinsic
 type or structure, then converting it back to Python object to be
-passed to the Python/C++ wrapper function, that in turn would convert
-the Python object (again) to an equivalent C/C++ type object that can
-be finally passed to the underlying C++ library function. The return
+passed to the Python/C++ wrapper function, that would convert the
+Python object (again) to an equivalent C/C++ type object which can be
+finally passed to the underlying C++ library function. The return
 value of the C++ function would be transformed several times as well,
 just in the opposite direction of the functions calling sequence. In
 sum, all these object transformations may build up a considerable
-overhead on calling otherwise highly efficient C++ library functions
+overhead of calling otherwise highly efficient C++ library functions
 from Python.
 
 Another difficulty with calling C++ library functions from Numba
 originates from
 [name-mangling](https://en.wikipedia.org/wiki/Name_mangling) that C++
 compilers apply to function names in order to support function/method
-overloadin as well as other relevant C++ language features. In
+overloadings as well as other relevant C++ language features. In
 principle, one would be able to call such a C++ library function
 directly from Numba jitted function (using
 [numba.cfunc](https://numba.pydata.org/numba-doc/latest/user/cfunc.html)
-feature) if one would know how the C++ compiler internally transforms
-the function name. However, the name-mangling algorithm is C++
-compiler vendor dependent, and in practice, it would be very hard to
+feature) if one would know how the C++ compiler transforms the
+function name internally . However, the name-mangling algorithm is C++
+compiler vendor dependent, and in practice, it would be hard to
 predict the mangled name in a portable manner.
 
 ## cxx2py.py tool
 
-In this post we'll introduce a straightforward and efficient method of
-calling C++ library functions from Numba jitted functions (as well
-from Python when using
-[ctypes](https://docs.python.org/3/library/ctypes.html)) that
+In this post, we'll introduce a straightforward and efficient method
+of calling C++ library functions from Numba jitted functions that
 circumvents the name-mangling problem. The method is based on
 determining the C++ library functions addresses at runtime that
 together with functions signatures can be used to set up an highly
 efficient calling sequence.  This method will require creating a small
-C/C++ wrapper library that contains of ``export "C"``-attributed
-functions that return the addresses of C++ libray functions at
+C/C++ wrapper library that contains ``export "C"``-attributed
+functions which return the addresses of C++ libray functions at
 runtime.
 
 A Python script [cxx2py.py](cxx2py/cxx2py.py) is provided that
-auto-generates the wrapper library as well as a helper ctypes wrapper
-module from user-supplied C++ header and source files. The helper
-Python module contains ``ctypes`` definitions of C++ library functions
-that Numba jitted functions are able to call directly without
-requiring the expensive object transformations as described above.
+auto-generates, from user-supplied C++ header and source files, the
+wrapper library as well as a Python
+[ctypes](https://docs.python.org/3/library/ctypes.html wrapper
+module. The Python module contains ``ctypes`` definitions of C++
+library functions that Numba jitted functions are able to call
+directly without requiring the expensive object transformations
+mentioned above.
 
-Currently supported features include:
+Currently, the supported features include:
 
-- wrapping C++ library functions with scalar inputs and return values
-- supported C++ functions may be defined inside C++ namespaces
-- supported C++ functions may be static class member functions
+- wrapping of C++ library functions with scalar inputs and return
+  values,
+- supported C++ functions may be defined inside C++ namespaces,
+- supported C++ functions may be static class member functions.
 
-The ``cxx2py.py`` tool can be extended to support other important C++
-features such as
+The ``cxx2py.py`` tool can be extended to support other C++ features
+such as
 
-- creating C++ class/struct instances
+- creating C++ class/struct instances from Python
 - passing C++ class/struct instances around
 - calling the methods of C++ class/struct instances
 - supporting pointer types as function inputs and return values
 - etc.
 
 ``cxx2py.py`` uses ``clang++`` to parse C++ header files and to build
-the wrapper library as shared object and a ctypes wrapper module. It
-also uses [RBC - Remote Backend
-Compiler](https://github.com/xnd-project/rbc/) for parsing the
-signatures of C++ functions for convenience.
+the shared wrapper library and the Python wrapper module. It also uses
+[RBC - Remote Backend Compiler](https://github.com/xnd-project/rbc/)
+for parsing the signatures of C++ functions for convenience.
 
 ## Example
 
 As a prerequisite, let's create a conda environment as follows
-
 ```bash
 $ conda create -n cxx2py-demo -c conda-forge numba rbc cxx-compiler clangdev
 $ conda activate cxx2py-demo
 ```
 
-copy the ``cxx2py.py`` tool to the current working directory, and make
-sure that it is functional:
+We assume that the [cxx2py.py](cxx2py/cxx2py.py) script is copied to
+the current working directory and is functional:
 ```bash
 $ python cxx2py.py --help
-usage: cxx2py.py [-h] [-m MODULENAME] [--clang-exe CLANG_EXE] [--clang-ast-dump-flags CLANG_AST_DUMP_FLAGS] [--clang-build-flags CLANG_BUILD_FLAGS] [--clang-extra-flags CLANG_EXTRA_FLAGS] [--build]
-                 [--verbose]
+usage: cxx2py.py [-h] [-m MODULENAME] [--clang-exe CLANG_EXE]
+                 [--clang-ast-dump-flags CLANG_AST_DUMP_FLAGS]
+                 [--clang-build-flags CLANG_BUILD_FLAGS]
+                 [--clang-extra-flags CLANG_EXTRA_FLAGS]
+                 [--build] [--verbose]
                  file [file ...]
 
 Generate ctypes wrappers to C++ library functions
@@ -114,16 +116,18 @@ optional arguments:
   --clang-exe CLANG_EXE
                         Path to clang compiler (default: clang++)
   --clang-ast-dump-flags CLANG_AST_DUMP_FLAGS
-                        Override flags to clang ast dump command (default: '-Xclang -ast-dump -fsyntax-only -fno-diagnostics-color')
+                        Override flags to clang ast dump command (default:
+                        '-Xclang -ast-dump -fsyntax-only -fno-diagnostics-color')
   --clang-build-flags CLANG_BUILD_FLAGS
-                        Override flags to clang build shared library command (default: '-shared -fPIC')
+                        Override flags to clang build shared library command
+                        (default: '-shared -fPIC')
   --clang-extra-flags CLANG_EXTRA_FLAGS
                         Extra flags to clang command (default: '')
   --build               Build shared library (default: False)
   --verbose             Be verbose (default: False)
 ```
 
-Next, let's consider the following C++ header and source file that we
+Next, let us consider the following C++ header and source file that we
 will use as a model of a C++ library:
 ```c++
 /* File: foo.hpp */
@@ -202,7 +206,7 @@ extern "C" intptr_t get_ns__BarCls__fun_address() {
 The ``cxx2py_libfoo.cpp`` file is built into the shared library
 ``libcxx2py_libfoo.so`` when ``--build`` flag is used.
 
-Let's test the ctypes wrapper module [libfoo](cxx2py/libfoo.py) in Python:
+Let's test the wrapper module [libfoo](cxx2py/libfoo.py) in Python:
 ```bash
 $ export LD_LIBRARY_PATH=.  # this makes sure that ctypes is able to find the shared library
 $ python
@@ -219,9 +223,10 @@ in ns::ns2::bar(1.200000)
 54321
 ```
 that is, the C++ library functions can be called directly from Python
-(thanks to [ctypes](https://docs.python.org/3/library/ctypes.html)!).
+thanks to [ctypes](https://docs.python.org/3/library/ctypes.html)!.
 
-Moreover, the C++ library functions can be called from Numba jitted functions as well:
+Moreover, the C++ library functions can be called from Numba jitted
+functions as well. For example:
 ```
 >>> import numba
 >>> @numba.njit
@@ -236,8 +241,8 @@ in foo(7)
 ## Summary
 
 In this post, we outlined a method of calling C++ library functions
-from Python with emphasis of calling these from Numba jitted functions
-with minimal overhead. While the provided tool ``cxx2py.py`` currently
-supports only wrapping C++ functions with scalar inputs and return
-values, it can be easily extended to support other C++ features as
-well.
+from Python with emphasis of using these from Numba jitted functions
+with minimal overhead. While the provided tool
+[cxx2py_libfoo.cpp](cxx2py/cxx2py_libfoo.cpp) currently supports only
+wrapping C++ functions with scalar inputs and return values, it can be
+easily extended to support other C++ features as well.
