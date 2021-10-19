@@ -3,6 +3,8 @@ author: Pearu Peterson
 created: 2021-10-05
 ---
 
+> A revised version of this blog post is available as [Quansight Labs blog](https://labs.quansight.org/blog/2021/10/cxx-numba-interoperability/).
+
 # An efficient method of calling C++ functions from numba/Python using clang++/ctypes/rbc
 
 ## Introduction
