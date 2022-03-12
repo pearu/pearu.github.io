@@ -21,27 +21,23 @@ multi-dimensional regular grid.
 
 When all nodes of the grid have assigned a value then this defines the
 so-called *dense array*. Dense arrays are the most commonly used array
-structure as these allow efficient storage of array elements (an array
-element is a pair of index and the corresponding value) as a
-contiguous sequence of values. In the case of dense arrays there is no
-need to store the array indices explicitly as these can be computed
-from the memory location of the corresponding array values. On dense
+structures as these allow efficient storage of array elements as a
+contiguous sequence of values while storing array indices is not
+required (recall, an array element is a pair of index and the
+corresponding value): the array indices can be computed from the
+memory locations of the corresponding array values.  With dense
 arrays, computationally very efficient algorithms can be implemented
 that take advantage of the memory structure of the computational
-processor unit(s) if it matches with the memory stucture of array storage.
+processor unit(s) if it matches with the memory structure of arrays.
 
-A generalization of dense arrays is the so-called sparse array that is
-an array that may leave some grid nodes undefined (the corresponding
-nodes have no value assigned). From this follows that in addition to
-storing array values, the indices of specified array elements must be
-stored as well. A number of storage formats exists for storing the
-elements of sparse arrays. These formats are designed to be memory and
-processor efficient on particular sparsity patterns as well as for
-particular operations on such arrays. For instance, if the sparsity
-pattern of the sparse array corresponds to the pattern of masking out
-certain array elements, then this provide the most efficient storage
-of the masked arrays that can be used to represent the concept of
-structural lack of data.
+A generalization of dense arrays is the so-called *sparse array* that
+is an array that may leave some grid nodes undefined (the
+corresponding nodes have no value assigned). From this follows that in
+addition to storing array values, the indices of specified array
+elements must be stored as well. A number of storage formats exists
+for storing the elements of sparse arrays. These formats are designed
+to be memory and processor efficient for particular sparsity patterns
+as well as for particular operations on such arrays.
 
 It is important to notice that we have introduced the sparse array as
 generalization of the dense array. On the other hand, sparse arrays
@@ -58,30 +54,29 @@ non-zero elements of the array.
 ## Dense and sparse tensors in PyTorch
 
 PyTorch currently defines the following tensor storage layouts:
-- strided layout (``torch.strided``) is used in dense tensors that to
-  store the tensor values contiguously in memory. Strided tensors are
+- strided layout (``torch.strided``) is used in so-called *strided
+  tensors* that represent dense array.  Strided tensors are
   particularly efficient in performing slicing operations as the array
-  slice can be defined as a strides operation that does not involve
-  accessing the storage of tensor values.
-- sparse COO layout (``torch.sparse_coo``) is used in sparse tensors
-  that store the array indices and values as a pair of certain strided
-  tensors.
+  slice can be defined as a strides operation alone.
+- sparse COO layout (``torch.sparse_coo``) is used in so-called
+  *sparse tensors* that store the array elements a a pair of strided
+  tensors: indices and values.
 - sparse CSR layout (``torch.sparse_csr``) is similar to sparse COO
   layout but it uses certain compression for storing the row indices
   of array elements. Only 2-D tensors can use this layout.
 
 According to the latest development, PyTorch considers a sparse tensor
 layout as a compression method for storing dense tensor elements (here
-"dense" and "strided layout" are distinct concepts).  Of course, the
-compression has positive effect only for dense tensors that majority
-of elements have zero values.
+we consider "dense" and "strided" as distinct concepts).  Of course,
+the compression has positive effect only for dense tensors that
+elements are mostly zeros.
 
 All elementwise tensor operations defined in ``torch`` namespace
 support sparse tensor inputs only if the corresponding operation maps
 a zero value to zero. For this reason, ``torch.sin`` can be applied to
 sparse tensors but ``torch.cos`` can't, for instance.
 
-Historically, ``torch.sparse`` defines a few operations (``sum``,
+Historically, ``torch.sparse`` defines few operations (``sum``,
 ``softmax``, ``softmin``, etc) that treat unspecified elements as
 masked-out elements. However, if one requires a consistent tool for
 working with masked-out elements, then one should use operations
@@ -90,24 +85,21 @@ defined in the ``torch._masked`` namespace. The operations in
 ``torch`` namespace but the API is extended with an extra keyword
 argument ``mask`` that contains a tensor that defines which values in
 the input are masked-out while performing the operations. Note that
-the input and mask tensors to the masked operations may have
-arbitrary layouts (masked operations are layout invariant and
-unspecified values of sparse tensors are treated as zeros) but the
-operations are most performant if the input and mask tensors layouts
-match and these have the same set of specified indices.
+the input and mask arguments to the masked operations are tensors with
+arbitrary layouts: masked operations are layout invariant and the
+unspecified elements of sparse tensors are treated as zeros.
 
 
 ## Masked reductions on tensors with arbitrary storage layout
 
 Consider a regular reduction ``torch.reduction_op``
 (e.g. ``torch.sum``, ``torch.amax``, ``torch.argmin``, etc) that
-supports strided tensor inputs but not sparse tensor inputs. On the
-other hand, the corresponding masked reduction
-``torch._masked.reduction_op`` is designed to support both strided and
-sparse inputs. In the following, we'll define masked reductions on
-tensors with arbitrary storage layout using the PyTorch design
-principle of layout invariance of operations and the definition of
-existing operations on strided tensors.
+supports strided tensor inputs. On the other hand, the corresponding
+masked reduction ``torch._masked.reduction_op`` is designed to support
+both strided and sparse inputs. In the following, we'll define masked
+reductions on tensors with arbitrary storage layout using the PyTorch
+design principle of layout invariance of operations and the definition
+of existing operations on strided tensors.
 
 For strided inputs, the regular and masked reductions
 are related via
@@ -122,7 +114,7 @@ torch._masked.reduction_op(input, ..., mask=None).to_dense() == torch.reduction_
 ```
 The behaviour of masked reduction when mask is not specified (the
 ``mask is None`` case), corresponds to masked reduction with so-called
-default mask tensor. For strided inputs, the default mask is
+*default mask* tensor. For strided inputs, the default mask is
 ```python
 input.new_ones(input.shape, dtype=bool)
 ```
@@ -136,29 +128,30 @@ argument by converting the ``input`` argument to
 ```python
 input_mask = torch.where(mask, input, reduction_op_identity)
 ```
-and then apply regular reduction to ``input_mask``. In the case of
-sparse tensor inputs, it is desirable that masked reduction algorithms
-would operate on the sparse tensors data only, that is, sparse tensors
-should not be materialized as strided tensors because it would be very
-memory inefficient for large sized tensors. On the other hand, to
-allow optimizations, we want to provide masked reduction
-implementations on sparse tensors that assume that the masked-in
-pattern of input elements as defined by the mask tensor would match
-with the sparsity pattern of the sparse input, that is, for all
-specified elements of the sparse input the corresponding mask value is
-``True`` and for all unspecified elements the mask value is ``False``.
+and then apply regular reduction to ``input_mask``.
 
-For simplicity, let's assume that the input and mask layouts are the
-same and the mask tensor is normalized:
+In the case of sparse tensor inputs, it is desirable that masked
+reduction algorithms would operate on the sparse tensors data only,
+that is, sparse tensors should not be materialized as strided tensors
+because it would be very memory inefficient method for large sized
+tensors. On the other hand, to allow optimizations, we want to provide
+masked reduction implementations on sparse tensors that assume that
+the masked-in pattern of input elements (as defined by the mask
+tensor) would match with the sparsity pattern of the sparse input,
+that is, for all specified elements of the sparse input the
+corresponding mask value is ``True`` and for all unspecified elements
+the mask value is ``False``.
+
+To define a masked operation on sparse tensors, we defined so-called *normalized* mask:
 ```python
-if mask.values().all():
-    normalized_mask = mask
-else:
-    normalized_mask = mask.to(dtype=bool).to_sparse().coalease().to(layout=mask.layout)
+normalized_mask = mask.to_sparse().coalesce().to(dtype=bool, layout=mask.layout)
 ```
 
-Next, apply normalized mask to input (pseudo-code follows):
+such that ``normalized_mask.values().all() == True``. Next, apply
+normalized mask to input (pseudo-code follows, actual implementations
+will vary):
 ```python
+mask_input = torch.empty(input.shape, dtype=input.dtype)
 for index in indices(normalized_mask):
     if index in indices(input):
         mask_input[index] = input[index]
@@ -168,5 +161,7 @@ for index in indices(normalized_mask):
 for index not in indices(normalized_mask):
     mask_input[index] = reduction_op_identity
 ```
-and the final result of masked reduction is obtained by applying
+The result of masked reduction operation is obtained by applying
 regular reduction to ``mask_input``.
+
+
