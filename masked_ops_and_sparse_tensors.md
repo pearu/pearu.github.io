@@ -142,7 +142,7 @@ that is, for all specified elements of the sparse input the
 corresponding mask value is ``True``, and for all unspecified elements
 the mask value is ``False``.
 
-To compute a masked reduction of a sparse input tensor, we first define (pseudo-code follows):
+To compute a masked reduction of a sparse input tensor, we first define using pseudo-code:
 ```python
 input_mask = torch.empty(input.shape, dtype=input.dtype)  # this is strided tensor!
 for index in itertools.product(*map(range, input.shape)):
@@ -175,7 +175,7 @@ possibilities:
 1. If ``input`` specifies an element and ``mask`` defines it as being
    masked-out, then the corresponding ``input_mask`` element value is
    ``reduction_op_identity``. [Here we have a choice of not specifying
-   the corresponding element in ``input_mask`` or specify it by
+   the corresponding element in ``input_mask``, or we can specify it by
    assigning reduction identity value to it.]
 2. If ``input`` specifies an element and ``mask`` defines it as being
    masked-in, then the corresponding ``input_mask`` element
@@ -194,8 +194,47 @@ So, the case 1 allows reducing the set of ``input_mask`` indices while
 the case 3 may increase the set of indices with respect to the set of
 ``input`` indices. We don't consider the question with respect to the
 set of ``mask`` indices because it would be impractical, for example,
-when ``mask`` is the default mask than ``input_mask`` would become a
+when ``mask`` is the default mask then ``input_mask`` would become a
 dense array.
 
+To visualize the possible options for composing ``input_mask`` tensor,
+let us consider the following 1-D sparse arrays:
+```python
+input = [*, *, *, x, y, z]
+mask  = [*, F, T, *, F, T]
+```
+where ``*`` denotes unspecified values, ``F``/``T`` are the boolean
+values defining the mask, and ``x``/``y``/``z`` are arbitrary values
+of the input. In addition, let ``I`` denote the reduction identity
+value. Then there exists four general constructions of the
+``mask_input`` tensors:
+```python
+input_mask1 = [*, *, 0, *, *, z]
+input_mask2 = [*, I, 0, *, I, z]
+input_mask3 = [*, I, 0, I, I, z]
+input_mask4 = [I, I, 0, I, I, z]
+```
+The first option ``input_mask1`` is minimal in the sense that all
+specified values are masked-in and its sparsity pattern is defined by
+``mask.to_dense().to_sparse()``.  The second option ``input_mask2``
+has the same sparsity pattern as ``mask``.  The third option
+``input_mask3`` has the sparsity pattern of the union of the sparsity
+patterns of ``input`` and ``mask``.  Finally, the forth option
+``input_mask4`` corresponds to dense array as defined in the
+pseudo-code above.
+
+For certain reductions that result can be quickly determined if one of
+the operands has zero value, we can define reduction-dependent
+constructions for ``input_mask``:
+```python
+input_mask5 = [*, *, 0, *, *, *]
+input_mask6 = [*, *, *, *, *, z]
+```
+where ``input_mask5`` would be optimal for ``prod`` reduction, for
+instance, where all input values can be discarded if unspecified input
+value is masked-in.
+The option ``input_mask6`` would be appropiate for reductions that
+reduction identity is zero so that only masked-in and specified input
+values determine the result, as is the case for ``sum``, for instance.
 
 
