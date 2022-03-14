@@ -139,29 +139,63 @@ masked reduction implementations on sparse tensors that assume that
 the masked-in pattern of input elements (as defined by the mask
 tensor) would match with the sparsity pattern of the sparse input,
 that is, for all specified elements of the sparse input the
-corresponding mask value is ``True`` and for all unspecified elements
+corresponding mask value is ``True``, and for all unspecified elements
 the mask value is ``False``.
 
-To define a masked operation on sparse tensors, we defined so-called *normalized* mask:
+To compute a masked reduction of a sparse input tensor, we first define (pseudo-code follows):
 ```python
-normalized_mask = mask.to_sparse().coalesce().to(dtype=bool, layout=mask.layout)
-```
-
-such that ``normalized_mask.values().all() == True``. Next, apply
-normalized mask to input (pseudo-code follows, actual implementations
-will vary):
-```python
-mask_input = torch.empty(input.shape, dtype=input.dtype)
-for index in indices(normalized_mask):
-    if index in indices(input):
-        mask_input[index] = input[index]
+input_mask = torch.empty(input.shape, dtype=input.dtype)  # this is strided tensor!
+for index in itertools.product(*map(range, input.shape)):
+    if index in mask and mask[index]:
+        if index in input:
+            input_mask[index] = input[index]
+        else:
+            input_mask[index] = 0  # follows from layout invariance of tensor operations
     else:
-        mask_input[index] = 0
-
-for index not in indices(normalized_mask):
-    mask_input[index] = reduction_op_identity
+        input_mask[index] = reduction_op_identity  # masked-out elements are treated as reduction identities
 ```
 The result of masked reduction operation is obtained by applying
-regular reduction to ``mask_input``.
+regular reduction to ``input_mask``.
+
+While the above defines the masked reduction on sparse tensors, it
+would be impractical to implement because ``input_mask`` tensor is
+strided tensor. Next we'll adjust the definintion of ``input_mask``
+tensor such that it will be a sparse tensor and we could implement the
+masked reduction operator on sparse tensors such that
+```python
+torch._masked.reduction_op(input, ..., mask=mask) == _sparse_masked_reduction_op(input_mask, ...)
+```
+holds.
+
+First, let's analyze what should be the sparsity pattern of
+``input_mask``: should it match with the sparsity pattern of
+``input``, or of ``mask``, or something else?
+For each element of the ``input_mask`` tensor, we have four
+possibilities:
+1. If ``input`` specifies an element and ``mask`` defines it as being
+   masked-out, then the corresponding ``input_mask`` element value is
+   ``reduction_op_identity``. [Here we have a choice of not specifying
+   the corresponding element in ``input_mask`` or specify it by
+   assigning reduction identity value to it.]
+2. If ``input`` specifies an element and ``mask`` defines it as being
+   masked-in, then the corresponding ``input_mask`` element
+   value is the value of the input element.
+3. If ``input`` does not specify a value and ``mask`` defines it as
+   being masked-out, then the corresponding ``input_mask`` element
+   will not be specified. [This case enables ``input_mask`` being a
+   sparse tensor when ``input`` is sparse].
+4. If ``input`` does not specify a value and ``mask`` defines it as
+   being masked-in, then the corresponding ``input_mask`` element
+   value is zero. [This case requires that ``input_mask`` must specify
+   elements that are not specified in ``input`` (unless the reduction
+   identity value is zero).]
+   
+So, the case 1 allows reducing the set of ``input_mask`` indices while
+the case 3 may increase the set of indices with respect to the set of
+``input`` indices. We don't consider the question with respect to the
+set of ``mask`` indices because it would be impractical, for example,
+when ``mask`` is the default mask than ``input_mask`` would become a
+dense array.
+
 
 
