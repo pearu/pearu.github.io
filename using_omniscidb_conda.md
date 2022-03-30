@@ -5,12 +5,12 @@
 | Author     | Pearu Peterson  |
 | Created    | 2022-03-30      |
 
-The aim of this blog post is to describe the usage of omniscidb from
+The aim of this blog post is to describe using omniscidb software from
 conda environment. In the following, we'll exemplify this using
-OmniSciDB version 5.10 installed as a conda-forge package. At the
-moment of writing this post, the rebranded software --
-[https://github.com/heavyai/heavydb](HeavyDB (formely OmniSciDB)) --
-is not available via conda-forge yet.
+OmniSciDB version 5.10 as available from conda-forge. At the moment of
+writing this post, the rebranded software -- [HeavyDB (formely
+OmniSciDB)](https://github.com/heavyai/heavydb) -- is not available
+via conda-forge yet.
 
 # Prerequisites
 
@@ -23,8 +23,8 @@ $ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 $ bash Miniconda3-latest-Linux-x86_64.sh
 ```
 
-and follow the given instructions (if you have not done this before, accepting
-all defaults is fine).
+and follow the installation instructions (if you have not done this
+before, accepting all defaults is fine).
 
 Run
 
@@ -33,7 +33,7 @@ $ eval "$(/path/to/miniconda3/bin/conda shell.bash hook)"
 ```
 
 to activate the conda ``base`` environment. This will make ``conda``
-command line tool available that we'll use below for various tasks.
+command line tool available which we'll use below for various tasks.
 
 ## Create conda environment for running omniscidb server
 
@@ -43,18 +43,19 @@ To create an environment for running omniscidb, run
 $ conda create -n omniscidb-env -c conda-forge omniscidb
 ```
 
-that will install the latest ``omniscidb`` conda forge package and all
-its prerequisites.
+that will install the latest ``omniscidb`` conda-forge package (5.10) and all
+its prerequisites to newly created conda environment ``omniscidb-env``.
 
 Notice that this will install CPU-only version of the omniscidb software.
 
-To install CUDA-enabled version of the omniscidb software, use
+To install the CUDA-enabled version of the omniscidb software, use
 
 ```bash
 $ conda create -n omniscidb-cuda-env -c conda-forge omniscidb=*=*cuda
 ```
 
-Do not install CPU-only and CUDA-enabled omniscidb to the same environment!
+Warning: Do not install CPU-only and CUDA-enabled omniscidb software
+to the same environment!
 
 ## Create conda environment for running omniscidb clients
 
@@ -88,7 +89,7 @@ First, you must activate the omniscidb server conda environment:
 $ conda activate omniscidb-env
 ```
 
-To check the successful installation of omniscidb server, run
+To check the successful installation of the omniscidb server, run
 
 ```bash
 $ omnisci_server --version
@@ -114,9 +115,9 @@ define new SQL operators to the omniscidb server.
 
 Assuming that the omniscidb server is running (see above), let's try
 to connect to it using different clients. For the following
-instructions, use a different shell prompt from the one that runs the
-server. When opening the new shell prompt, you'll may need to
-initialize conda bash hook:
+instructions, use a shell prompt that is different from the one that
+runs the server (unless it has been put to background). When opening the
+new shell prompt, you'll may need to initialize the conda bash hook:
 
 ```bash
 $ eval "$(/path/to/miniconda3/bin/conda shell.bash hook)"
@@ -149,7 +150,7 @@ $ conda deactivate
 ```
 
 Here we created a new DB table ``example_table`` that we'll shall use
-in the other examples below.
+in the examples below.
 
 ## Using pyomnisci Python package
 
@@ -175,7 +176,7 @@ example DB table:
 
 See [pyomnisci
 documentation](https://pyomnisci.readthedocs.io/en/latest/?badge=latest)
-for more information.
+for more information about the package.
 
 
 ```bash
@@ -192,7 +193,7 @@ Python and register it to omniscidb server. First, let's activate the
 $ conda activate omnisci-user
 ```
 
-In Python, let's connect to omniscidb server using rbc:
+In Python, connect to the omniscidb server using a ``RemoteOmnisci`` object provided by ``rbc``:
 ```python
 >>> import rbc
 >>> omnisci = rbc.omniscidb.RemoteOmnisci(user="admin", password="HyperInteractive", host="localhost", dbname="omnisci")
@@ -271,10 +272,12 @@ $ python test_colincr.py
 In the above, we used rbc to create UDFs that are registered as new
 SQL operators to running omniscidb server. Such UDFs are called
 runtime UDFs and these can be re-defined or removed during the server
-runtime. OmnisciDB server supports also defining so-called load-time
+runtime. OmniSciDB server also supports defining so-called load-time
 UDFs that are implemented in C++ and that are compiled to SQL
-operators at the start up of the omniscidb server and these will
-persists til the server exits.
+operators at the start up of the omniscidb server. Loadtime UDFs
+persists till the server exits. (OmniSciDB server supports
+compile-time UDFs that will be built into the server binary. We'll not
+discuss such UDFs here.)
 
 To illustrate the usage of C++ UDFs, will need to stop the omniscidb
 server and update the ``omniscidb-env`` environment as follows:
@@ -393,10 +396,10 @@ displays the status of the driver, and one has CUDA installed, that is,
 $CUDA_HOME/nvvm/libdevice/libdevice.10.bc
 ```
 exists. Update ``CUDA_HOME`` environment variable to meet your system
-configuration if needed.
+state if needed.
 
-When using CUDA enabled omniscidb server, use the following updates
-applied to the previous section:
+When using CUDA enabled omniscidb server, use the following updates as
+discussed in the previous section:
 
 ```bash
 conda activate omniscidb-cuda-env
@@ -410,5 +413,5 @@ Notice that the CUDA version of the conda package ``nvcc_linux-64``
 must match with the CUDA version installed in the ``CUDA_HOME``
 directory. Here we use CUDA version 11.5 as an example.
 
-When done, the ``ARRAY_SUM`` example from the previous example would
+When done, the ``ARRAY_SUM`` example from the previous section would
 be executed on a CUDA device.

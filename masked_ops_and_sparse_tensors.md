@@ -238,3 +238,82 @@ reduction identity is zero so that only masked-in and specified input
 values determine the result, as is the case for ``sum``, for instance.
 
 
+
+
+
+Let's assume that we have an implementation to masked reduction
+operation for sparse input tensors that sparsity pattern matches with
+the pattern of masked-in elements:
+``_sparse_masked_reduction_op(sparse, ...)``.  Next we'll adjust the
+definition of ``input_mask`` such that it will be a sparse tensor that
+sparsity pattern matches with the sparsity pattern of input tensor
+such that we would have:
+```python
+torch._masked.reduction_op(input, ..., mask=mask) == _sparse_masked_reduction_op(input_mask, ...)
+```
+where ``input`` is a sparse tensor and it uses the same layout as
+``input_mask`` (to ensure that the input and result layouts will be
+the same).
+
+Let us assume that the indices set of ``input_mask`` tensor matches with
+the indices set of ``input`` even when some elements would be masked
+out by ``mask`` elements: the corresponding masked out elements will
+be replaced by reduction identity values. On the other hand, when some
+unspecified elements of ``input`` tensor are masked-in as defined by
+the ``mask`` tensor, then the corresponding elements should be treated
+as zeros. This will contradict with the assumption as the
+``input_mask`` input would need to specify elements that are not
+specified in the ``input`` tensor.
+
+Next, let us assume that the indices set of ``input_mask`` tensor matches with the indices set of ``mask``: the specified elements of ``input``
+
+
+An alternative would be that the indices set of ``input_mask`` matches
+with the indices set of the corresponding ``mask`` elements that have
+value ``True`` --- if so then masked-in elements that are not
+specified in input would be replaced by zero within ``input_mask``
+tensor.
+
+Warning: At the moment, it is not completely clear what either of
+these choices mean with respect to PyTorch autograd support.
+
+
+
+
+This
+indices set may or may not intersect with the indices set of ``input``.
+
+If ``mask`` is a strided tensor then ``input_mask`` indices can be
+obtained via ``normalized_mask = mask.to(dtype=bool).to_sparse()`` if input is sparse
+COO tensor, or via ``normalized_mask = mask.to(dtype=bool).to_sparse_csr()`` if the
+input is sparse CSR tensor.  The values of ``input_mask`` can be
+computed as follows (unoptimized code follows):
+```python
+values = normalized_mask.values().zeros_like(dtype=input.values().dtype)
+a = flatten_indices(normalized_mask.to_sparse().indices())
+b = flatten_indices(input.to_sparse().indices())
+for i, index in enumerate(b):
+    if index in a:
+        j = a.index(index)
+        values[j] = input.values()[i]
+```
+As a result, we have:
+```
+input_mask = torch.sparse_coo_tensor(normalized_mask.indices(), values)
+input_mask = torch.sparse_csr_tensor(normalized_mask.crow_indices(), normalized_mask.col_indices(), values)
+```
+
+If ``mask`` is already a sparse tensor, we'll need to take into
+account possible masked-out elements:
+```python
+values = mask.values().zeros_like(dtype=input.values().dtype)
+a = flatten_indices(mask.to_sparse().indices())
+b = flatten_indices(input.to_sparse().indices())
+for i, index in enumerate(b):
+    if index in a:
+        j = a.index(index)
+        if mask[index]:
+            values[j] = input.values()[i]
+        else:
+            values[j] = reduction_op_identity
+```
