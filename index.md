@@ -1,5 +1,6 @@
 # Pearu's blogs
 
+- [About storing variable length arrays][variable_length_arrays.md] - April 22, 2022
 - [Using OmniSciDB from conda environment](using_omniscidb_conda.md) - March 30, 2022
 - [PyTorch masked operations on sparse tensors](masked_ops_and_sparse_tensors.md) - March 12, 2022
 - [An efficient method of calling C++ functions from numba/Python](https://labs.quansight.org/blog/2021/10/cxx-numba-interoperability/) - October 18, 2021 ([original](cxx_numba_interoperability.md) - October 5, 2021)
