@@ -140,7 +140,7 @@ class JaggedArray:
         ----------
         index : int
           The index of var-lenght array.
-        varlenarray : {VarLengthArray, list, None}
+        varlenarray : {list, None}
           A var-lenght array or a list of var-length array elements or
           a null var-length array represented by None value.
         """
@@ -155,9 +155,6 @@ class JaggedArray:
         if isinstance(varlenarray, list):
             size = len(varlenarray)
             values = varlenarray
-        elif isinstance(varlenarray, VarLengthArray):
-            size = varlenarray.size
-            values = varlenarray.values
         elif varlenarray is UNSPECIFIED:
             return
         else:
@@ -171,9 +168,6 @@ class JaggedArray:
         assert 0 <= index and index < self.size
         values = self._unsafe_getitem(index)
         return values
-        if values is None or values is UNSPECIFIED:
-            return values
-        return VarLengthArray(values, len(values))
 
     def tolist(self):
         """Return jagged array as a list of lists.
@@ -194,7 +188,7 @@ class JaggedArray:
 
     def finalize(self):
         """
-        Set unspecified elements as null var-length arrays.
+        Set unspecified elements as null varlen arrays.
         """
         for index, storage_index in enumerate(self.storage_indices):
             if storage_index == -1:
