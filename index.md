@@ -1,5 +1,6 @@
 # Pearu's blogs
 
+- [PyTorch BSR tensor invariants](bsr_tensor_invariants.md) - Jun 6, 2022
 - [Efficient storage of variable length arrays in random order](variable_length_arrays.md) - April 22, 2022
 - [Using OmniSciDB from conda environment](using_omniscidb_conda.md) - March 30, 2022
 - [PyTorch masked operations on sparse tensors](masked_ops_and_sparse_tensors.md) - March 12, 2022
