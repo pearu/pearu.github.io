@@ -68,7 +68,7 @@ A tensor with BSR layout has the following members (as defined by constructor `s
 
 1.5 `dtype` is `float32` (default if `values` contains floats),
     `float64`, `int8`, `int16`, `int32`, `int64` (default if `values`
-    contains ints only), `bool` (default if `values` contains only
+    contains integers only), `bool` (default if `values` contains only
     boolean values), `complex32` (unsupported ATM), `complex64`
     (default if `values` contains complex numbers), or `complex128`.
 
@@ -293,3 +293,10 @@ densesize = values.shape[M + 3:]
 nrows = crow_indices.shape[-1] - 1
 ncols = max(col_indices.max() - 1, crow_indices.diff(dim=-1).max())
 ```
+
+Notice that estimating `ncols` involves accessing indices data and
+some computations. Therefore, for an optimal performance in creating
+BSR tensors, use a factory function with shape explicitly specified
+whenever possible. For the best performance, use an unsafe factory
+function with shape specified, but be warned, inconsistencies in
+tensor data will not be discovered.
