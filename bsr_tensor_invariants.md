@@ -60,15 +60,17 @@ A tensor with BSR layout has the following members (as defined by constructor `s
 
 1.1 `crow_indices.dtype == indices_dtype`
 
-1.2 `col_indices.dtype = indices_dtype`
+1.2 `col_indices.dtype == indices_dtype`
 
-1.3 `indices_dtype` is `int32` (default) or `int64`
+1.3 `indices_dtype` is `int32` or `int64` (default)
 
 1.4 `values.dtype == dtype`
 
-1.5 `dtype` is `float32` (default), `float64`, `int8`, `int16`,
-    `int32`, `int64`, `bool`, `complex32` (unsupported ATM),
-    `complex64`, or `complex128`.
+1.5 `dtype` is `float32` (default if `values` contains floats),
+    `float64`, `int8`, `int16`, `int32`, `int64` (default if `values`
+    contains ints only), `bool` (default if `values` contains only
+    boolean values), `complex32` (unsupported ATM), `complex64`
+    (default if `values` contains complex numbers), or `complex128`.
 
 ### Layout invariants
 
@@ -264,7 +266,7 @@ Same as 1.1-1.5, 2.1-2.4, and 4.1-4.4 above.
 
 5.6 `col_indices[..., crow_indices[..., i-1]:crow_indices[..., i]]`
     must be sorted and with distinct values for all `i=1,...,nrows`,
-    that is, each batch is a coalesced.
+    that is, each batch is coalesced.
 
 In the above, ellipses `...` reads `i1, ..., iM` and the invariants
 apply for all `0 <= i1 < batchsize[0], ..., 0 <= iM < batchsize[M-1]`.
