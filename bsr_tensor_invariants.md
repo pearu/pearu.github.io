@@ -291,7 +291,7 @@ M = len(batchsize)
 blocksize = values.shape[M + 1: M + 3]
 densesize = values.shape[M + 3:]
 nrows = crow_indices.shape[-1] - 1
-ncols = max(col_indices.max() - 1, crow_indices.diff(dim=-1).max())
+ncols = max(col_indices.max() + 1, crow_indices.diff(dim=-1).max())
 ```
 
 Notice that estimating `ncols` involves accessing indices data and
