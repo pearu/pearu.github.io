@@ -265,8 +265,8 @@ Same as 1.1-1.5, 2.1-2.4, and 4.1-4.4 above.
 5.5 `col_indices.max() < ncols`
 
 5.6 `col_indices[..., crow_indices[..., i-1]:crow_indices[..., i]]`
-    must be sorted and with distinct values for all `i=1,...,nrows`,
-    that is, each batch is coalesced.
+    must be an ordered sequence with with distinct integer values for
+    all `i=1,...,nrows`, that is, each batch is coalesced.
 
 In the above, ellipses `...` reads `i1, ..., iM` and the invariants
 apply for all `0 <= i1 < batchsize[0], ..., 0 <= iM < batchsize[M-1]`.
