@@ -1,5 +1,6 @@
 # Pearu's blogs
 
+- [Implementing PyTorch autograd backward methods for tensor operations](torch_autograd_backward.md) - Jan 24, 2026
 - [PyTorch BSR tensor invariants](bsr_tensor_invariants.md) - Jun 6, 2022
 - [Efficient storage of variable length arrays in random order](variable_length_arrays.md) - April 22, 2022
 - [Using OmniSciDB from conda environment](using_omniscidb_conda.md) - March 30, 2022
