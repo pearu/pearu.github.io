@@ -330,6 +330,8 @@ def backward(ctx, G):
     return -G * wmask
 ```
 
+#### Out-of-range `ii`
+
 In the above, we have assumed that `ii` is in the range of `A` and `W`
 indices. However, `ii` may be out of this range and `T` may have
 values equal to `ii`. As a result, if `n'` is such that `T[n'] == ii`
