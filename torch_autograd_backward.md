@@ -330,6 +330,23 @@ def backward(ctx, G):
     return -G * wmask
 ```
 
+In the above, we have assumed that `ii` is in the range of `A` and `W`
+indices. However, `ii` may be out of this range and `T` may have
+values equal to `ii`. As a result, if `n'` is such that `T[n'] == ii`
+then expressions such as `W[T[n']]` and `A[n', T[n']]` are not well
+defined which is a problem for the implementations of `nll_loss`.
+
+Let's assume that `ii` is not in the range of `W` indices and `reduction == 'sum'`.
+Then
+```math
+F(A) = \sum_n -W[T[n]] * (1-\delta_{T[n], ii}) * A[n, T[n]]
+```
+```math
+= \sum_n -W[T'[n]] * A[n, T'[n]] + W[0] * A[n, 0] * \delta_{T[n], 0}
+```
+where $T'[n] = T[n] * \delta_{T[n], ii}$.
+
+
 ### Linear cross-entropy: `linear_cross_entropy(A, L, T, bias=b, weight=W, ignore_index=ii, reduction='mean', label_smoothing=0.0)`
 
 We'll first consider the case where `T` contains class indices. Hence,
