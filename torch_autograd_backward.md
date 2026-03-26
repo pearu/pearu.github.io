@@ -346,7 +346,7 @@ F(A) = \sum_n -W[T[n]] * (1-\delta_{T[n], ii}) * A[n, T[n]]
 ```math
 = \sum_n -W[T'[n]] * A[n, T'[n]] + W[0] * A[n, 0] * \delta_{T[n], 0}
 ```
-where $T'[n] = T[n] * \delta_{T[n], ii}$.
+where $T'[n] = T[n] * (1 - \delta_{T[n], ii})$.
 
 
 ### Linear cross-entropy: `linear_cross_entropy(A, L, T, bias=b, weight=W, ignore_index=ii, reduction='mean', label_smoothing=0.0)`
