@@ -361,7 +361,7 @@ where
 W'[n] = W[T'[n]] * (1 - \delta_{T[n], 0} * \delta_{T'[n], 0})
 ```
 Similarly, for `reduction == "mean"` we'll find
-```
+```math
 F(A) =  \frac{\sum_n -W'[n] * A[n, T'[n]]}{\sum_{n} W'[n]}
 ```
 
