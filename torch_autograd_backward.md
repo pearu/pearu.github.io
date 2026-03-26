@@ -330,7 +330,7 @@ def backward(ctx, G):
     return -G * wmask
 ```
 
-#### Out-of-range `ii`
+#### The case with out-of-range `ii`
 
 In the above, we have assumed that `ii` is in the range of `A` and `W`
 indices. However, `ii` may be out of this range and `T` may have
@@ -339,7 +339,11 @@ then expressions such as `W[T[n']]` and `A[n', T[n']]` are not well
 defined which is a problem for the implementations of `nll_loss`.
 
 Let's assume that `ii` is not in the range of `W` indices and `reduction == 'sum'`.
-Then
+Define
+```math
+T'[n] = T[n] * (1 - \delta_{T[n], ii})$
+```
+then
 ```math
 F(A) = \sum_n -W[T[n]] * (1-\delta_{T[n], ii}) * A[n, T[n]]
 ```
@@ -350,15 +354,11 @@ F(A) = \sum_n -W[T[n]] * (1-\delta_{T[n], ii}) * A[n, T[n]]
 = \sum_n -W[T'[n]] * A[n, T'[n]] + W[T'[n]] * A[n, T'[n]] * \delta_{T[n], 0} * \delta_{T'[n], 0}
 ```
 ```math
-= \sum_n -W[T'[n]] * A[n, T'[n]] * (1 - \delta_{T[n], 0} * \delta_{T'[n], 0})
+= \sum_n -W[T'[n]] * A[n, T'[n]] * (1 - \delta_{T[n], 0} * \delta_{T'[n], 0}) = \sum_n -W'[n] * A[n, T'[n]]
 ```
-where $T'[n] = T[n] * (1 - \delta_{T[n], ii})$. Let's define
+where
 ```math
 W'[n] = W[T'[n]] * (1 - \delta_{T[n], 0} * \delta_{T'[n], 0})
-```
-then
-```math
-F(A) = \sum_n -W'[n] * A[n, T'[n]]
 ```
 
 ### Linear cross-entropy: `linear_cross_entropy(A, L, T, bias=b, weight=W, ignore_index=ii, reduction='mean', label_smoothing=0.0)`
