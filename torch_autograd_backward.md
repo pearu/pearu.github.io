@@ -343,23 +343,34 @@ Define
 ```math
 T'[n] = T[n] * (1 - \delta_{T[n], ii})
 ```
-then
+so that out-of-range indices are mapped to index 0. Let's find
 ```math
 F(A) = \sum_n -W[T[n]] * (1-\delta_{T[n], ii}) * A[n, T[n]]
 ```
 ```math
-= \sum_n -W[T'[n]] * A[n, T'[n]] + W[0] * A[n, 0] * \delta_{T[n], 0}
+= \sum_n -(W[T'[n]] * A[n, T'[n]] - W[0] * A[n, 0] * \delta_{T[n], ii})
+```
+
+where the second term corrects the contribution from `ii` mapping to
+0: if there exists $n$ such that $T[n] == 0$ and $n'$ such that $T[n']
+== ii$ then $T'[n] == T'[n']$ and both $n$ and $n'$ produce the same
+term ($W[0] * A[n, 0]$) while there should be no terms corresponding to $n'$,
+hence, we'll need to substact the term from $n'$.
+
+Notice that $T[n] == ii$ then $T'[n] == 0$, that is, we can write
+```math
+F(A) = \sum_n -(W[T'[n]] * A[n, T'[n]] - W[T'[n]] * A[n, T'[n]] * \delta_{T[n], ii})
 ```
 ```math
-= \sum_n -W[T'[n]] * A[n, T'[n]] + W[T'[n]] * A[n, T'[n]] * \delta_{T[n], 0} * \delta_{T'[n], 0}
-```
-```math
-= \sum_n -W[T'[n]] * A[n, T'[n]] * (1 - \delta_{T[n], 0} * \delta_{T'[n], 0}) = \sum_n -W'[n] * A[n, T'[n]]
+= \sum_n -W[T'[n]] * A[n, T'[n]] * (1 - \delta_{T[n], ii}) = \sum_n -W'[n] * A[n, T'[n]]
 ```
 where
 ```math
-W'[n] = W[T'[n]] * (1 - \delta_{T[n], 0} * \delta_{T'[n], 0})
+W'[n] = W[T'[n]] * (1 - \delta_{T[n], ii})
 ```
+that is, we have eliminated the `ii` dependence in $F(A)$ by
+redefining $T$ and $W$ as $T'$ and $W'$, respectively.
+
 Similarly, for `reduction == "mean"` we'll find
 ```math
 F(A) =  \frac{\sum_n -W'[n] * A[n, T'[n]]}{\sum_{n} W'[n]}
@@ -459,6 +470,27 @@ def backward(ctx, G):
     return -G * grad_A, -G * grad_L, torch.zeros_like(b)
 ```
 
+#### The case with out-of-range `ii`
+
+As in the `nll_loss` case above, we'll now consider the case where `T`
+contains values (that are equal to `ii`) that are out of `W` index
+range.
+
+If `reduction == 'sum'` then
+```math
+F(A, L, b) = \sum_n -W[T[n]] * (1-\delta_{T[n], ii}) \left(X[n, T[n]] - \log\sum_{n'}\exp(X[n,n'])\right)
+```
+As above, we'll define
+```math
+T'[n] = T[n] * (1 - \delta_{T[n], ii})
+```
+```math
+W'[n] = W[T'[n]] * (1 - \delta_{T[n], ii})
+```
+and find
+```math
+F(A, L, b) = \sum_n -W'[n] * \left(X[n, T'[n]] - \log\sum_{n'}\exp(X[n,n'])\right)
+```
 
 # Conclusion
 
