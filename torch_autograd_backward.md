@@ -360,6 +360,11 @@ where
 ```math
 W'[n] = W[T'[n]] * (1 - \delta_{T[n], 0} * \delta_{T'[n], 0})
 ```
+Similarly, for `reduction == "mean"` we'll find
+```
+F(A) =  \frac{\sum_n -W'[n] * A[n, T'[n]]}{\sum_{n} W'[n]}
+```
+
 
 ### Linear cross-entropy: `linear_cross_entropy(A, L, T, bias=b, weight=W, ignore_index=ii, reduction='mean', label_smoothing=0.0)`
 
