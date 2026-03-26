@@ -341,7 +341,7 @@ defined which is a problem for the implementations of `nll_loss`.
 Let's assume that `ii` is not in the range of `W` indices and `reduction == 'sum'`.
 Define
 ```math
-T'[n] = T[n] * (1 - \delta_{T[n], ii})$
+T'[n] = T[n] * (1 - \delta_{T[n], ii})
 ```
 then
 ```math
