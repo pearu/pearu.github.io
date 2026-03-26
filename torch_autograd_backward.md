@@ -347,14 +347,14 @@ F(A) = \sum_n -W[T[n]] * (1-\delta_{T[n], ii}) * A[n, T[n]]
 = \sum_n -W[T'[n]] * A[n, T'[n]] + W[0] * A[n, 0] * \delta_{T[n], 0}
 ```
 ```math
-= \sum_n -W[T'[n]] * A[n, T'[n]] + W[T'[n]] * A[n, T'[n]] * \delta_{T[n], 0} \delta_{T'[n], 0}
+= \sum_n -W[T'[n]] * A[n, T'[n]] + W[T'[n]] * A[n, T'[n]] * \delta_{T[n], 0} * \delta_{T'[n], 0}
 ```
 ```math
-= \sum_n -W[T'[n]] * A[n, T'[n]] * (1 - \delta_{T[n], 0} \delta_{T'[n], 0})
+= \sum_n -W[T'[n]] * A[n, T'[n]] * (1 - \delta_{T[n], 0} * \delta_{T'[n], 0})
 ```
 where $T'[n] = T[n] * (1 - \delta_{T[n], ii})$. Let's define
 ```math
-W'[n] = W[T'[n]] * (1 - \delta_{T[n], 0} \delta_{T'[n], 0})
+W'[n] = W[T'[n]] * (1 - \delta_{T[n], 0} * \delta_{T'[n], 0})
 ```
 then
 ```math
