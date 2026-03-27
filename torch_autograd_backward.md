@@ -355,9 +355,9 @@ where the second term corrects the contribution from `ii` mapping to
 0: if there exists $n$ such that $T[n] == 0$ and $n'$ such that $T[n']
 == ii$ then $T'[n] == T'[n']$ and both $n$ and $n'$ produce the same
 term ($W[0] * A[n, 0]$) while there should be no terms corresponding to $n'$,
-hence, we'll need to substact the term from $n'$.
+hence, we'll need to substact the term originating from $n'$.
 
-Notice that $T[n] == ii$ then $T'[n] == 0$, that is, we can write
+Notice that if $T[n] == ii$ then $T'[n] == 0$, that is, we can write
 ```math
 F(A) = \sum_n -(W[T'[n]] * A[n, T'[n]] - W[T'[n]] * A[n, T'[n]] * \delta_{T[n], ii})
 ```
@@ -428,7 +428,7 @@ F(A, L, b) = \sum_n -W[T[n]] * \log \mathrm{softmax}(X, dim=1)_{n, T[n]}
 = \sum_n -W[T[n]] * \left(\delta_{T[n],i_1} * A[n, i_2] - \mathrm{softmax}(X, dim=1)_{n,i_1}* A[n, i_2]\right)
 ```
 ```math
-= \sum_n -W[T[n]] * \left(\delta_{T[n],i_1} - \mathrm{softmax}(X, dim=1)_{n,i_1}* \right) * A[n, i_2]
+= \sum_n -W[T[n]] * \left(\delta_{T[n],i_1} - \mathrm{softmax}(X, dim=1)_{n,i_1} \right) * A[n, i_2]
 ```
 ```math
 \frac{\partial F(A, L, b)_j}{\partial b_i} 
