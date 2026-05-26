@@ -379,12 +379,14 @@ F(A) =  \frac{\sum_n -W'[n] * A[n, T'[n]]}{\sum_{n} W'[n]}
 
 ### Linear cross-entropy: `linear_cross_entropy(A, L, T, bias=b, weight=W, ignore_index=ii, reduction='mean', label_smoothing=0.0)`
 
-We'll first consider the case where `T` contains class indices. Hence,
-$N=2$, $M=0$ if `reduction != 'none'`, otherwise $M=1$.
+We'll first consider the case where `T` contains class indices.
+Hence, $N=2$, $M=0$ if `reduction != 'none'`, otherwise $M=1$.
+
+We treat `b` in its most general form -- a `(num_batches, num_classes)` matrix indexed by both axes of the logits -- so that both the per-sample bias `b[n_1]` and the standard `nn.Linear`-style per-class bias `b[n_2]` fall out as corollaries below.
 
 Let's define
 ```math
-X[n_1, n_2] = \sum_{k} A[n_1, k] * L[n_2, k] + b[n_1]
+X[n_1, n_2] = \sum_{k} A[n_1, k] * L[n_2, k] + b[n_1, n_2]
 ```
 We have
 ```math
@@ -394,7 +396,7 @@ We have
 \frac{\partial X[n_1, n_2]}{\partial L[i_1, i_2]} = \sum_{k} A[n_1, k] * \delta_{n_2,i_1}*\delta_{k, i_2} =  \delta_{n_2,i_1} * A[n_1, i_2],
 ```
 ```math
-\frac{\partial X[n_1, n_2]}{\partial b[i_1]} = \delta_{n_1, i_1}, \qquad \forall n_2.
+\frac{\partial X[n_1, n_2]}{\partial b[i_1, i_2]} = \delta_{n_1, i_1} * \delta_{n_2, i_2}.
 ```
 
 In the following, when $ii >= 0$, we'll set `W[ii] = 0` that will eliminate the $(1-\delta_{T[n], ii})$ term in the `nll_loss` function.
@@ -431,8 +433,14 @@ F(A, L, b) = \sum_n -W[T[n]] * \log \mathrm{softmax}(X, dim=1)_{n, T[n]}
 = \sum_n -W[T[n]] * \left(\delta_{T[n],i_1} - \mathrm{softmax}(X, dim=1)_{n,i_1} \right) * A[n, i_2]
 ```
 ```math
-\frac{\partial F(A, L, b)_j}{\partial b_i} 
-= \sum_n -W[T[n]] * \left(\delta_{n, i_1} - \frac{\sum_{n'}\exp(X[n, n']) * \delta_{n, i_1}}{\sum_{n''}\exp(X[n, n''])}\right) = 0
+\frac{\partial F(A, L, b)_j}{\partial b_i} =
+\sum_n -W[T[n]] * \left(\delta_{n,i_1} * \delta_{T[n], i_2} - \frac{\sum_{n'} \exp(X[n,n']) * \delta_{n,i_1} * \delta_{n', i_2}}{\sum_{n''}\exp(X[n, n''])}\right)
+```
+```math
+= \sum_n -W[T[n]] * \delta_{n, i_1} * \left(\delta_{T[n], i_2} - \mathrm{softmax}(X, dim=1)_{i_1, i_2}\right)
+```
+```math
+= -W[T[i_1]] * \left(\delta_{T[i_1], i_2} - \mathrm{softmax}(X, dim=1)_{i_1, i_2}\right)
 ```
 
 ```math
@@ -443,7 +451,7 @@ F(A, L, b) = \sum_n -W[T[n]] * \log \mathrm{softmax}(X, dim=1)_{n, T[n]}
 \sum_n W[T[n]] * \left(\delta_{T[n],i_1} - \mathrm{softmax}(X, dim=1)_{n,i_1} \right) * A[n, i_2]
 ```
 ```math
-\sum_j G_j * \frac{\partial F(A, L, b)_j}{\partial b_i} = 0
+\sum_j G_j * \frac{\partial F(A, L, b)_j}{\partial b_i} = -G * W[T[i_1]] * \left(\delta_{T[i_1], i_2} - \mathrm{softmax}(X, dim=1)_{i_1, i_2}\right)
 ```
 
 that is,
@@ -456,6 +464,7 @@ def backward(ctx, G):
     lS = log_softmax(X, dim=1)
     S = exp(lS)
     w = W.index_select(0, T).unsqueeze(1)
+    one_hot = torch.zeros_like(S).scatter_(1, T.unsqueeze(1), 1.0)
     grad_A = w * L.index_select(0, T) - (w * S) @ L
     Wx = torch.zeros_like(L).scatter_reduce_(0,
                                              T.unsqueeze(1).expand(x.shape),
@@ -463,18 +472,39 @@ def backward(ctx, G):
                                              'sum',
                                              include_self=False)
     grad_L =  Wx - (w * S).T @ A
+    grad_b = w * (one_hot - S)
     if reduction == "mean":
         d = W.index_select(0, T).sum()
         grad_A /= d
         grad_L /= d
-    return -G * grad_A, -G * grad_L, torch.zeros_like(b)
+        grad_b /= d
+    return -G * grad_A, -G * grad_L, -G * grad_b
 ```
+
+#### Corollary 1: per-sample bias `b[n_1]` is a no-op
+
+If `b` depends only on the batch index, i.e. `b[n_1, n_2] = b[n_1]` for every `n_2`, then `b` enters `X` as a row-wise constant shift.
+The chain rule gives the bias gradient by summing the general result over `n_2`:
+```math
+\frac{\partial F}{\partial b[i_1]} = \sum_{i_2} -W[T[i_1]] * \left(\delta_{T[i_1], i_2} - \mathrm{softmax}(X, dim=1)_{i_1, i_2}\right) = -W[T[i_1]] * (1 - 1) = 0.
+```
+This is the softmax shift-invariance property: adding the same scalar to every class of a given sample does not change `log_softmax(X)[n_1, T[n_1]]`, and so the loss does not see `b[n_1]` at all.
+In the backward code, this corresponds to `grad_b.sum(dim=1) == 0` for any inputs.
+
+#### Corollary 2: per-class bias `b[n_2]` is the standard `nn.Linear` bias
+
+If `b` depends only on the class index, i.e. `b[n_1, n_2] = b[n_2]` for every `n_1`, then `b` plays the role of the bias in `nn.Linear(in_features, num_classes, bias=True)`.
+The chain rule gives the bias gradient by summing the general result over `n_1`:
+```math
+\frac{\partial F}{\partial b[i_2]} = \sum_{i_1} -W[T[i_1]] * \left(\delta_{T[i_1], i_2} - \mathrm{softmax}(X, dim=1)_{i_1, i_2}\right).
+```
+This is non-zero in general: the `δ` term contributes `-W[T[n]]` whenever `T[n] = i_2`, while the softmax term contributes a continuous mass at column `i_2` from every row.
+The expression matches the well-known cross-entropy logit gradient `softmax(X) - one_hot(T)` summed over the batch and weighted per row by `W[T[n]]` -- the same formula that backs `nn.CrossEntropyLoss` over a preceding `nn.Linear`, and the convention used by Liger Kernel's fused cross-entropy kernel.
+In the backward code, this corresponds to `grad_b.sum(dim=0)`.
 
 #### The case with out-of-range `ii`
 
-As in the `nll_loss` case above, we'll now consider the case where `T`
-contains values (that are equal to `ii`) that are out of `W` index
-range.
+As in the `nll_loss` case above, we'll now consider the case where `T` contains values (that are equal to `ii`) that are out of `W` index range.
 
 If `reduction == 'sum'` then
 ```math

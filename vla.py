@@ -40,7 +40,7 @@ class JaggedArray:
         Parameters
         ----------
         size : int
-          The number of var-length arrays.
+          The number of varlen arrays.
         max_buffer_size : int
           The size of values buffer.
         """
